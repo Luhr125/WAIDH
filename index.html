@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0b1020" />
+    <title>Signal Sprint</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <main class="game-shell">
+      <header>
+        <p class="eyebrow">WAIDH ARCADE</p>
+        <h1>Signal Sprint</h1>
+        <p class="intro">Triff das leuchtende Signal, bevor die Zeit abläuft.</p>
+      </header>
+
+      <section class="scoreboard" aria-label="Spielstand">
+        <div><span>Punkte</span><strong id="score">0</strong></div>
+        <div><span>Zeit</span><strong><span id="time">30</span>s</strong></div>
+        <div><span>Rekord</span><strong id="high-score">0</strong></div>
+      </section>
+
+      <section id="arena" class="arena" aria-label="Spielfeld">
+        <button id="target" class="target" type="button" aria-label="Signal treffen"></button>
+        <div id="start-panel" class="start-panel">
+          <h2 id="panel-title">Bereit?</h2>
+          <p id="panel-copy">Du hast 30 Sekunden. Jeder Treffer macht das Signal kleiner.</p>
+          <button id="start-button" class="start-button" type="button">Spiel starten</button>
+        </div>
+      </section>
+
+      <p class="hint">Tipp: Klicke oder tippe direkt auf das Signal.</p>
+    </main>
+    <script src="game.js"></script>
+  </body>
+</html>
