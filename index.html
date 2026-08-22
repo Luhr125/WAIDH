@@ -3,76 +3,307 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#080b12" />
-    <title>Don't Touch the Red</title>
+    <meta name="theme-color" content="#080b14" />
+    <title>Sync Showdown</title>
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
-    <main class="game-shell">
-      <!-- Titel und wichtigste Regel -->
-      <header class="game-header">
-        <div>
-          <p class="eyebrow">WAIDH ARCADE</p>
-          <h1>Don't Touch the Red</h1>
-        </div>
-        <p class="main-rule"><span></span> Alles Rote ist tödlich.</p>
+    <div class="app-shell">
+      <header class="topbar">
+        <a class="brand" href="#" aria-label="Sync Showdown Startseite">
+          <span class="brand-mark">S</span>
+          <span>SYNC <strong>SHOWDOWN</strong></span>
+        </a>
+        <p class="privacy-note">
+          <span class="privacy-dot"></span>
+          Aufnahmen bleiben auf diesem Gerät
+        </p>
       </header>
 
-      <!-- Diese Werte werden in game.js laufend aktualisiert. -->
-      <section class="hud" aria-label="Spielstatus">
-        <div class="hud-item">
-          <span class="hud-label">Score</span>
-          <strong id="score">0</strong>
+      <main>
+        <!-- ==================================================
+             HAUPTMENÜ
+             ================================================== -->
+        <section id="menu-screen" class="screen active">
+          <div class="hero-copy">
+            <p class="eyebrow">DEINE STIMME. DEINE SZENE.</p>
+            <h1>Sprich die Szene<br /><em>komplett neu.</em></h1>
+            <p>
+              Eine lokale Synchronsprecher-Gameshow für 1–4 Personen.
+              Anhören, aufnehmen, gemeinsam lachen und Punkte sammeln.
+            </p>
+          </div>
+
+          <div class="menu-layout">
+            <section class="panel setup-panel">
+              <div class="panel-heading">
+                <div>
+                  <span class="step-number">01</span>
+                  <h2>Show vorbereiten</h2>
+                </div>
+                <span id="microphone-badge" class="status-badge">MIKRO AUS</span>
+              </div>
+
+              <label class="field-label" for="player-count">Anzahl Spieler</label>
+              <select id="player-count">
+                <option value="1">1 Spieler</option>
+                <option value="2">2 Spieler</option>
+                <option value="3">3 Spieler</option>
+                <option value="4">4 Spieler</option>
+              </select>
+
+              <div id="player-name-fields" class="player-name-fields"></div>
+
+              <label class="field-label volume-label" for="master-volume">
+                Wiedergabe-Lautstärke
+                <span id="volume-value">80%</span>
+              </label>
+              <input id="master-volume" type="range" min="0" max="100" value="80" />
+
+              <div class="menu-actions">
+                <button id="start-game-button" class="primary-button" type="button">
+                  Show starten
+                </button>
+                <button id="open-mic-test" class="secondary-button" type="button">
+                  Mikrofon testen
+                </button>
+                <button id="open-guide" class="text-button" type="button">
+                  Wie funktioniert das?
+                </button>
+              </div>
+
+              <p id="menu-error" class="inline-error hidden" role="alert"></p>
+            </section>
+
+            <section class="panel scene-panel">
+              <div class="panel-heading">
+                <div>
+                  <span class="step-number">02</span>
+                  <h2>Szene auswählen</h2>
+                </div>
+                <span id="scene-type-badge" class="status-badge ready">DEMO</span>
+              </div>
+
+              <div class="scene-preview-card">
+                <div class="preview-space">
+                  <span class="preview-star star-one">✦</span>
+                  <span class="preview-star star-two">✦</span>
+                  <div class="preview-character captain"><span></span></div>
+                  <div class="preview-character robot"><span></span></div>
+                </div>
+                <div>
+                  <p class="scene-label">AUSGEWÄHLTE SZENE</p>
+                  <h3 id="selected-scene-title">Notfall im All</h3>
+                  <p id="selected-scene-details">5 Dialoge · 21 Sekunden · Canvas-Demo</p>
+                </div>
+              </div>
+
+              <div class="scene-actions">
+                <button id="select-demo-scene" class="secondary-button selected" type="button">
+                  Demo verwenden
+                </button>
+                <label class="file-button" for="video-file-input">Eigenes Video</label>
+                <input id="video-file-input" class="visually-hidden" type="file" accept="video/*" />
+                <button id="open-scene-editor" class="secondary-button" type="button">
+                  Dialoge bearbeiten
+                </button>
+              </div>
+
+              <p class="local-file-note">
+                Videos werden nur lokal geöffnet und niemals hochgeladen.
+              </p>
+            </section>
+          </div>
+        </section>
+
+        <!-- ==================================================
+             AUFNAHME-STUDIO UND FINALE WIEDERGABE
+             ================================================== -->
+        <section id="studio-screen" class="screen">
+          <div class="studio-header">
+            <button id="leave-studio-button" class="text-button back-button" type="button">← Menü</button>
+            <div class="studio-status">
+              <span id="current-player-name">SPIELER 1</span>
+              <span id="cue-progress">DIALOG 1 / 5</span>
+            </div>
+            <span id="studio-mic-badge" class="status-badge ready">MIKRO BEREIT</span>
+          </div>
+
+          <div id="stage" class="stage">
+            <canvas id="scene-canvas" width="960" height="540" aria-label="Animierte Demo-Szene"></canvas>
+            <video id="scene-video" class="hidden" playsinline preload="metadata"></video>
+
+            <div id="subtitle" class="subtitle hidden">
+              <span id="subtitle-speaker"></span>
+              <strong id="subtitle-text"></strong>
+            </div>
+
+            <div id="countdown" class="countdown hidden" aria-live="assertive">3</div>
+
+            <div id="recording-hud" class="recording-hud hidden">
+              <span class="recording-dot"></span>
+              <strong>REC</strong>
+              <span id="recording-time">0.0s</span>
+              <div class="mini-meter"><span id="recording-level"></span></div>
+            </div>
+
+            <div class="scene-progress"><span id="scene-progress-bar"></span></div>
+          </div>
+
+          <section id="cue-controls" class="cue-controls">
+            <div class="cue-copy">
+              <p id="cue-speaker" class="cue-speaker">CAPTAIN NOVA</p>
+              <h2 id="cue-text">Wir verlieren Energie auf allen Systemen!</h2>
+            </div>
+
+            <div id="record-actions" class="action-row">
+              <button id="preview-cue-button" class="secondary-button" type="button">Original ansehen</button>
+              <button id="record-cue-button" class="primary-button" type="button">Meinen Take aufnehmen</button>
+            </div>
+
+            <div id="take-actions" class="action-row hidden">
+              <button id="play-take-button" class="secondary-button" type="button">Take anhören</button>
+              <button id="play-with-scene-button" class="secondary-button" type="button">Mit Szene ansehen</button>
+              <button id="retry-take-button" class="danger-button" type="button">Neu aufnehmen</button>
+              <button id="keep-take-button" class="primary-button" type="button">Take behalten</button>
+            </div>
+
+            <p id="studio-message" class="studio-message"></p>
+          </section>
+
+          <section id="final-controls" class="final-controls hidden">
+            <div>
+              <p class="eyebrow">FINAL CUT</p>
+              <h2>Eure synchronisierte Szene</h2>
+            </div>
+            <div class="action-row">
+              <button id="play-final-button" class="primary-button" type="button">Abspielen</button>
+              <button id="pause-final-button" class="secondary-button" type="button">Pause</button>
+              <button id="restart-final-button" class="secondary-button" type="button">Von vorne</button>
+              <button id="show-jury-button" class="secondary-button accent" type="button">Zur Jury</button>
+            </div>
+          </section>
+        </section>
+
+        <!-- ==================================================
+             JURY
+             ================================================== -->
+        <section id="jury-screen" class="screen centered-screen">
+          <div class="section-intro">
+            <p class="eyebrow">DIE ENTSCHEIDUNG</p>
+            <h1>Die Jury hat gewählt.</h1>
+            <p>Eine unterhaltsame Arcade-Wertung aus Timing, Länge und Mikrofonlautstärke.</p>
+          </div>
+          <div id="jury-cards" class="jury-cards"></div>
+          <div class="total-score-panel">
+            <span>GESAMTPUNKTZAHL</span>
+            <strong id="round-score">0</strong>
+            <small>/ 50</small>
+          </div>
+          <button id="continue-after-jury" class="primary-button" type="button">Weiter</button>
+        </section>
+
+        <!-- ==================================================
+             RANGLISTE
+             ================================================== -->
+        <section id="leaderboard-screen" class="screen centered-screen">
+          <div class="section-intro">
+            <p class="eyebrow">SHOW BEENDET</p>
+            <h1 id="winner-title">And the winner is …</h1>
+            <p>Alle Takes wurden nur lokal verarbeitet.</p>
+          </div>
+          <div id="confetti" class="confetti" aria-hidden="true"></div>
+          <ol id="leaderboard" class="leaderboard"></ol>
+          <button id="new-round-button" class="primary-button" type="button">Neue Runde</button>
+        </section>
+      </main>
+    </div>
+
+    <!-- ==================================================
+         MIKROFONTEST
+         ================================================== -->
+    <div id="mic-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="mic-modal-title">
+      <div class="modal-card">
+        <button class="modal-close" data-close-modal="mic-modal" type="button" aria-label="Schliessen">×</button>
+        <p class="eyebrow">SOUNDCHECK</p>
+        <h2 id="mic-modal-title">Mikrofon testen</h2>
+        <p id="mic-test-status">Aktiviere dein Mikrofon, bevor die Show beginnt.</p>
+
+        <div class="large-meter" aria-label="Mikrofonlautstärke">
+          <span id="mic-level-bar"></span>
         </div>
-        <div class="hud-item hud-item-wide">
-          <span class="hud-label">Active Glitch</span>
-          <strong id="active-glitch">NONE</strong>
-        </div>
-        <div class="hud-item">
-          <span class="hud-label">Next Glitch</span>
-          <strong><span id="glitch-countdown">10</span>s</strong>
-        </div>
-      </section>
 
-      <section id="game-frame" class="game-frame">
-        <canvas
-          id="game-canvas"
-          width="960"
-          height="540"
-          aria-label="2D Jump-and-Run-Spielfeld"
-        ></canvas>
-
-        <!-- Kurze, grosse Meldung bei einem neuen Glitch -->
-        <div id="glitch-message" class="glitch-message" aria-live="polite">
-          <strong>⚠ GLITCH ⚠</strong>
-          <span id="glitch-name">REVERSE CONTROLS</span>
+        <div class="modal-actions">
+          <button id="activate-microphone" class="primary-button" type="button">Mikrofon aktivieren</button>
+          <button id="record-mic-test" class="secondary-button" type="button" disabled>10s aufnehmen</button>
+          <button id="stop-mic-test" class="danger-button hidden" type="button">Aufnahme stoppen</button>
         </div>
 
-        <!-- Start-, Game-Over- und Gewinn-Bildschirm -->
-        <div id="game-panel" class="game-panel">
-          <p id="panel-label" class="panel-label">WAIDH PROTOCOL</p>
-          <h2 id="panel-title">Bereit?</h2>
-          <p id="panel-text">
-            Erreiche das grüne Ziel. Alle 10 Sekunden verändert ein zufälliger Glitch das Spiel.
-          </p>
-          <p id="final-score" class="final-score hidden">SCORE: 0</p>
-          <button id="start-button" type="button">Spiel starten</button>
+        <audio id="mic-test-audio" class="hidden" controls></audio>
+        <button id="delete-mic-test" class="text-button hidden" type="button">Testaufnahme löschen</button>
+        <p class="privacy-box">Deine Mikrofonaufnahmen bleiben auf diesem Gerät und werden nicht hochgeladen.</p>
+      </div>
+    </div>
+
+    <!-- ==================================================
+         SZENENEDITOR
+         ================================================== -->
+    <div id="scene-editor-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="editor-title">
+      <div class="modal-card editor-card">
+        <button class="modal-close" data-close-modal="scene-editor-modal" type="button" aria-label="Schliessen">×</button>
+        <p class="eyebrow">CONTENT STUDIO</p>
+        <h2 id="editor-title">Dialoge bearbeiten</h2>
+
+        <div class="editor-toolbar">
+          <label>
+            Szenentitel
+            <input id="editor-scene-title" type="text" maxlength="80" />
+          </label>
+          <p>Dauer: <strong id="editor-duration">21.0s</strong></p>
+          <button id="add-cue-button" class="secondary-button" type="button">+ Dialog</button>
+          <label class="file-button" for="json-import-input">JSON importieren</label>
+          <input id="json-import-input" class="visually-hidden" type="file" accept="application/json,.json" />
+          <button id="export-json-button" class="secondary-button" type="button">JSON exportieren</button>
         </div>
-      </section>
 
-      <!-- Die Touch-Buttons sind auf Smartphones sichtbar. -->
-      <nav class="touch-controls" aria-label="Touch-Steuerung">
-        <button id="touch-left" type="button" aria-label="Nach links">←</button>
-        <button id="touch-jump" class="jump-button" type="button" aria-label="Springen">↑</button>
-        <button id="touch-right" type="button" aria-label="Nach rechts">→</button>
-      </nav>
+        <div class="editor-preview">
+          <canvas id="editor-preview-canvas" width="960" height="540" aria-label="Vorschau der Demo-Szene"></canvas>
+          <video id="editor-preview-video" class="hidden" playsinline controls></video>
+        </div>
 
-      <footer class="game-help">
-        <p><strong>Laufen:</strong> A / D oder ← / →</p>
-        <p><strong>Springen:</strong> W, ↑ oder Leertaste</p>
-      </footer>
-    </main>
+        <div class="cue-table-header" aria-hidden="true">
+          <span>Start</span><span>Ende</span><span>Figur</span><span>Dialog</span><span>Aktionen</span>
+        </div>
+        <div id="cue-editor-list" class="cue-editor-list"></div>
+        <p id="editor-error" class="inline-error hidden" role="alert"></p>
 
-    <script src="game.js"></script>
+        <div class="modal-actions end-actions">
+          <button id="save-scene-button" class="primary-button" type="button">Szene verwenden</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================================================
+         ANLEITUNG
+         ================================================== -->
+    <div id="guide-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="guide-title">
+      <div class="modal-card guide-card">
+        <button class="modal-close" data-close-modal="guide-modal" type="button" aria-label="Schliessen">×</button>
+        <p class="eyebrow">SO FUNKTIONIERT'S</p>
+        <h2 id="guide-title">In vier Schritten zur eigenen Szene</h2>
+        <ol class="guide-steps">
+          <li><strong>Anhören</strong><span>Sieh dir den Dialog mit Originalton oder Demo-Signal an.</span></li>
+          <li><strong>Einsprechen</strong><span>Nach dem Countdown läuft die Szene stumm und dein Mikrofon nimmt auf.</span></li>
+          <li><strong>Take wählen</strong><span>Höre deine Aufnahme an, wiederhole sie oder behalte sie.</span></li>
+          <li><strong>Bewerten</strong><span>Die lokale Arcade-Jury bewertet Timing und Lautstärke.</span></li>
+        </ol>
+        <p class="privacy-box">Eigene Videos und Sprachaufnahmen verlassen deinen Browser nicht.</p>
+      </div>
+    </div>
+
+    <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
+
+    <script src="scenes.js"></script>
+    <script src="app.js"></script>
   </body>
 </html>
