@@ -113,13 +113,32 @@ const redObstacles = [
 const goal = { x: 5070, y: 370, width: 65, height: 110 };
 
 // --------------------------------------------------
-// 5. SPIELZUSTAND
+// 5. GLITCH-SYSTEM
+// Es kann immer nur ein Eintrag aus dieser Liste aktiv sein.
+// --------------------------------------------------
+const glitches = [
+  { id: "reverseControls", name: "REVERSE CONTROLS" },
+  { id: "doubleSpeed", name: "DOUBLE SPEED" },
+  { id: "halfSpeed", name: "HALF SPEED" },
+  { id: "lowGravity", name: "LOW GRAVITY" },
+  { id: "superJump", name: "SUPER JUMP" },
+  { id: "autoJump", name: "AUTO JUMP" },
+  { id: "iceMode", name: "ICE MODE" },
+  { id: "screenFlip", name: "SCREEN FLIP" },
+  { id: "zoomOut", name: "ZOOM OUT" },
+];
+
+// --------------------------------------------------
+// 6. SPIELZUSTAND
 // --------------------------------------------------
 let gameState = "ready"; // ready, playing, gameover oder won
 let startTime = 0;
 let score = 0;
 let cameraX = 0;
 let lastFrameTime = performance.now();
+let activeGlitch = null;
+let nextGlitchTime = 0;
+let glitchMessageTimer = null;
 
 function resetPlayer() {
   player.x = spawnPoint.x;
@@ -136,20 +155,28 @@ function resetPlayer() {
 function startGame() {
   gameState = "playing";
   startTime = performance.now();
+  nextGlitchTime = startTime + SETTINGS.glitchInterval * 1000;
   score = 0;
   scoreDisplay.textContent = "0";
+  glitchCountdownDisplay.textContent = String(SETTINGS.glitchInterval);
   finalScoreDisplay.classList.add("hidden");
   gamePanel.classList.add("hidden");
   startButton.textContent = "Restart";
+  deactivateCurrentGlitch();
   resetPlayer();
 }
 
 function endGame(didWin) {
   if (gameState !== "playing") return;
 
+  // Beim Ende berechnen wir den Score ein letztes Mal ganz genau.
+  score = Math.floor((performance.now() - startTime) / 1000);
+  scoreDisplay.textContent = String(score);
   gameState = didWin ? "won" : "gameover";
   pressedKeys.clear();
   clearTouchInput();
+  deactivateCurrentGlitch();
+  glitchCountdownDisplay.textContent = "0";
 
   panelLabel.textContent = didWin ? "LEVEL COMPLETE" : "RED DETECTED";
   panelTitle.textContent = didWin ? "YOU SURVIVED!" : "GAME OVER";
@@ -162,8 +189,61 @@ function endGame(didWin) {
   startButton.focus();
 }
 
+function isGlitchActive(glitchId) {
+  return activeGlitch?.id === glitchId;
+}
+
+function deactivateCurrentGlitch() {
+  activeGlitch = null;
+  activeGlitchDisplay.textContent = "NONE";
+  canvas.classList.remove("screen-flip");
+}
+
+function activateRandomGlitch() {
+  const previousGlitchId = activeGlitch?.id;
+
+  // Zuerst endet der alte Effekt.
+  deactivateCurrentGlitch();
+
+  // Wenn möglich, wählen wir nicht zweimal nacheinander denselben Effekt.
+  const possibleGlitches = glitches.filter((glitch) => glitch.id !== previousGlitchId);
+  const randomIndex = Math.floor(Math.random() * possibleGlitches.length);
+  activeGlitch = possibleGlitches[randomIndex];
+
+  activeGlitchDisplay.textContent = activeGlitch.name;
+  canvas.classList.toggle("screen-flip", isGlitchActive("screenFlip"));
+  showGlitchMessage(activeGlitch.name);
+}
+
+function showGlitchMessage(glitchName) {
+  clearTimeout(glitchMessageTimer);
+  glitchNameDisplay.textContent = glitchName;
+
+  // Kurzes Entfernen und erneutes Hinzufügen startet die CSS-Animation neu.
+  glitchMessage.classList.remove("visible");
+  gameFrame.classList.remove("glitch-pulse");
+  void glitchMessage.offsetWidth;
+  glitchMessage.classList.add("visible");
+  gameFrame.classList.add("glitch-pulse");
+
+  glitchMessageTimer = setTimeout(() => {
+    glitchMessage.classList.remove("visible");
+    gameFrame.classList.remove("glitch-pulse");
+  }, SETTINGS.glitchMessageTime * 1000);
+}
+
+function updateGlitchSystem(now) {
+  if (now >= nextGlitchTime) {
+    activateRandomGlitch();
+    nextGlitchTime = now + SETTINGS.glitchInterval * 1000;
+  }
+
+  const millisecondsLeft = Math.max(0, nextGlitchTime - now);
+  glitchCountdownDisplay.textContent = String(Math.ceil(millisecondsLeft / 1000));
+}
+
 // --------------------------------------------------
-// 6. EINGABE
+// 7. EINGABE
 // --------------------------------------------------
 function isLeftPressed() {
   return pressedKeys.has("KeyA") || pressedKeys.has("ArrowLeft") || touchInput.left;
@@ -225,7 +305,7 @@ connectTouchButton("touch-right", "right");
 startButton.addEventListener("click", startGame);
 
 // --------------------------------------------------
-// 7. PHYSIK
+// 8. PHYSIK
 // --------------------------------------------------
 function moveNumberTowardZero(number, amount) {
   if (number > 0) return Math.max(0, number - amount);
@@ -238,18 +318,31 @@ function updatePlayer(deltaTime) {
   if (isLeftPressed()) moveDirection -= 1;
   if (isRightPressed()) moveDirection += 1;
 
+  // Reverse Controls vertauscht links und rechts.
+  if (isGlitchActive("reverseControls")) moveDirection *= -1;
+
+  let speedMultiplier = 1;
+  if (isGlitchActive("doubleSpeed")) speedMultiplier = 2;
+  if (isGlitchActive("halfSpeed")) speedMultiplier = 0.5;
+
+  const currentMaxSpeed = SETTINGS.playerSpeed * speedMultiplier;
+  const currentAcceleration = SETTINGS.acceleration * speedMultiplier;
+  const currentFriction = isGlitchActive("iceMode") ? 120 : SETTINGS.friction;
+  const currentGravity = isGlitchActive("lowGravity") ? SETTINGS.gravity * 0.5 : SETTINGS.gravity;
+  const currentJumpPower = isGlitchActive("superJump") ? SETTINGS.jumpPower * 1.55 : SETTINGS.jumpPower;
+
   // Beschleunigen, solange eine Richtung gedrückt wird.
   if (moveDirection !== 0) {
-    player.velocityX += moveDirection * SETTINGS.acceleration * deltaTime;
+    player.velocityX += moveDirection * currentAcceleration * deltaTime;
     player.velocityX = Math.max(
-      -SETTINGS.playerSpeed,
-      Math.min(SETTINGS.playerSpeed, player.velocityX),
+      -currentMaxSpeed,
+      Math.min(currentMaxSpeed, player.velocityX),
     );
   } else {
     // Ohne Eingabe bremst die Reibung den Spieler ab.
     player.velocityX = moveNumberTowardZero(
       player.velocityX,
-      SETTINGS.friction * deltaTime,
+      currentFriction * deltaTime,
     );
   }
 
@@ -258,7 +351,7 @@ function updatePlayer(deltaTime) {
 
   // Springen ist nur erlaubt, wenn die Figur auf einer Plattform steht.
   if (jumpStartedNow && player.onGround) {
-    player.velocityY = -SETTINGS.jumpPower;
+    player.velocityY = -currentJumpPower;
     player.onGround = false;
   }
   jumpWasPressed = jumpIsPressed;
@@ -268,17 +361,24 @@ function updatePlayer(deltaTime) {
   player.x = Math.max(0, Math.min(LEVEL_WIDTH - player.width, player.x));
 
   const previousBottom = player.y + player.height;
-  player.velocityY += SETTINGS.gravity * deltaTime;
+  player.velocityY += currentGravity * deltaTime;
   player.y += player.velocityY * deltaTime;
   player.onGround = false;
 
-  handlePlatformCollisions(previousBottom);
+  const landedOnPlatform = handlePlatformCollisions(previousBottom);
+
+  // Auto Jump löst direkt nach jeder Landung einen neuen Sprung aus.
+  if (landedOnPlatform && isGlitchActive("autoJump")) {
+    player.velocityY = -currentJumpPower;
+    player.onGround = false;
+  }
+
   checkDangerousCollisions();
   checkGoalCollision();
 }
 
 // --------------------------------------------------
-// 8. KOLLISIONEN
+// 9. KOLLISIONEN
 // --------------------------------------------------
 function rectanglesOverlap(first, second) {
   return first.x < second.x + second.width
@@ -289,7 +389,7 @@ function rectanglesOverlap(first, second) {
 
 function handlePlatformCollisions(previousBottom) {
   // Wir prüfen nur Landungen von oben. Das hält den Code einfach und stabil.
-  if (player.velocityY < 0) return;
+  if (player.velocityY < 0) return false;
 
   for (const platform of platforms) {
     const currentBottom = player.y + player.height;
@@ -301,9 +401,11 @@ function handlePlatformCollisions(previousBottom) {
       player.y = platform.y - player.height;
       player.velocityY = 0;
       player.onGround = true;
-      return;
+      return true;
     }
   }
+
+  return false;
 }
 
 function checkDangerousCollisions() {
@@ -318,7 +420,7 @@ function checkGoalCollision() {
 }
 
 // --------------------------------------------------
-// 9. UI UND SCORE
+// 10. UI, SCORE UND KAMERA
 // --------------------------------------------------
 function updateScore(now) {
   score = Math.floor((now - startTime) / 1000);
@@ -326,14 +428,16 @@ function updateScore(now) {
 }
 
 function updateCamera(deltaTime) {
-  const targetCameraX = player.x - CANVAS_WIDTH * 0.35;
+  const zoom = isGlitchActive("zoomOut") ? 0.68 : 1;
+  const visibleLevelWidth = CANVAS_WIDTH / zoom;
+  const targetCameraX = player.x - visibleLevelWidth * 0.35;
   const smoothMovement = Math.min(1, deltaTime * 7);
   cameraX += (targetCameraX - cameraX) * smoothMovement;
-  cameraX = Math.max(0, Math.min(LEVEL_WIDTH - CANVAS_WIDTH, cameraX));
+  cameraX = Math.max(0, Math.min(LEVEL_WIDTH - visibleLevelWidth, cameraX));
 }
 
 // --------------------------------------------------
-// 10. ZEICHNEN
+// 11. ZEICHNEN
 // --------------------------------------------------
 function drawBackground() {
   const background = context.createLinearGradient(0, 0, 0, CANVAS_HEIGHT);
@@ -415,9 +519,14 @@ function drawPlayer() {
 function drawGame() {
   drawBackground();
 
+  // Beim Zoom-Out-Glitch wird die ganze Spielwelt kleiner gezeichnet.
+  const zoom = isGlitchActive("zoomOut") ? 0.68 : 1;
+
   // Alle Level-Objekte werden gemeinsam mit der Kamera verschoben.
   context.save();
-  context.translate(-cameraX, 0);
+  context.translate(0, CANVAS_HEIGHT / 2);
+  context.scale(zoom, zoom);
+  context.translate(-cameraX, -CANVAS_HEIGHT / 2);
   drawPlatforms();
   drawRedObstacles();
   drawGoal();
@@ -426,7 +535,7 @@ function drawGame() {
 }
 
 // --------------------------------------------------
-// 11. GAME LOOP
+// 12. GAME LOOP
 // --------------------------------------------------
 function gameLoop(now) {
   // Der Maximalwert verhindert grosse Physiksprünge bei einem kurzen Ruckler.
@@ -434,6 +543,7 @@ function gameLoop(now) {
   lastFrameTime = now;
 
   if (gameState === "playing") {
+    updateGlitchSystem(now);
     updatePlayer(deltaTime);
     updateCamera(deltaTime);
     updateScore(now);
