@@ -81,8 +81,8 @@ const room2Mines = Array.from({length:21},(_,row)=>Array.from({length:37},(_,col
   X wird nach rechts größer, Y wird nach unten größer.
 */
 const rooms = [
-  // Raum 1 endet bereits bei X=1180. Der frühere rechte Zusatzgang gehört nicht mehr zum Level.
-  {name:"Eingangshalle", width:1180, start:680, left:null, right:y=>y>50&&y<140?{to:1,entry:90}:null, top:x=>x>650&&x<750&&collected.size===TOTAL_COINS?"finish":null,
+  // In Raum 1 wurden nur die beiden letzten senkrechten Wände rechts entfernt.
+  {name:"Eingangshalle", start:680, left:null, right:y=>y>50&&y<140?{to:1,entry:90}:null, top:x=>x>650&&x<750&&collected.size===TOTAL_COINS?"finish":null,
    walls:[...border,[150,105,34,570],[355,28,34,310],[355,470,34,322],[570,170,34,622],[795,28,34,455],[795,615,34,177],[1010,170,34,622]],
    drones:[[255,70,0,4.1,60,720],[465,720,0,-4.3,60,720],[690,75,0,4.4,60,720],[900,720,0,-4.2,60,720],[1095,70,0,4.5,60,720]], turrets:[[270,610],[690,100],[1090,520]], spinners:[[270,390,76,2.5],[700,550,86,-2.8],[1112,420,58,3.2]], mines:[[245,210],[465,520],[690,260],[900,640],[1100,220]], coins:[[70,500],[250,90],[470,400],[900,560],[1090,100]]},
   // Raum 2 verwendet das automatisch erzeugte Minenfeld und bewegliche Kugeln.
@@ -126,15 +126,12 @@ const doors=[
 // Wandelt eine Liste von Türöffnungen in die dazwischenliegenden Wandstücke um.
 function closedSegments(start,end,holes){const out=[];let p=start;for(const [a,b] of holes){if(a>p)out.push([p,a]);p=b;}if(p<end)out.push([p,end]);return out;}
 
-// Raum 1 ist kürzer als die beiden anderen Räume.
-function currentRoomWidth(){return rooms[map].width||W;}
-
 /*
   Gibt alle aktuell gültigen Wände zurück: Raumwände plus Außenwände.
   In Raum 1 wird zusätzlich die obere Barriere eingesetzt, solange weniger als
   15 Münzen gesammelt wurden.
 */
-function allWalls(){const d=doors[map],width=currentRoomWidth(),w=rooms[map].walls.slice(2);for(const [a,b] of closedSegments(28,H-28,d.left))w.push([0,a,28,b-a]);for(const [a,b] of closedSegments(28,H-28,d.right))w.push([width-28,a,28,b-a]);for(const [a,b] of closedSegments(0,width,d.top))w.push([a,0,b-a,28]);for(const [a,b] of closedSegments(0,width,d.bottom))w.push([a,H-28,b-a,28]);if(collected.size<TOTAL_COINS&&map===0)w.push([650,0,100,28]);return w;}
+function allWalls(){const d=doors[map],w=rooms[map].walls.slice(2);for(const [a,b] of closedSegments(28,H-28,d.left))w.push([0,a,28,b-a]);for(const [a,b] of closedSegments(28,H-28,d.right))w.push([W-28,a,28,b-a]);for(const [a,b] of closedSegments(0,W,d.top))w.push([a,0,b-a,28]);for(const [a,b] of closedSegments(0,W,d.bottom))w.push([a,H-28,b-a,28]);if(collected.size<TOTAL_COINS&&map===0)w.push([650,0,100,28]);return w;}
 
 /*
   Lädt einen Raum und setzt beide Spieler an dessen Eingang.
@@ -144,16 +141,14 @@ function allWalls(){const d=doors[map],width=currentRoomWidth(),w=rooms[map].wal
 */
 function enterRoom(next, coordinate, side="left") {
   map=next;entrySide=side;entryCoordinate=coordinate;
-  const width=currentRoomWidth();
-  canvas.width=width;
-  const groupHeight=P*2+PLAYER_GAP,safeX=Math.max(38,Math.min(width-38,coordinate));
+  const groupHeight=P*2+PLAYER_GAP,safeX=Math.max(38,Math.min(W-38,coordinate));
   let p1;
   if(side==="left"||side==="right"){
     const matchingHole=(doors[map]?.[side]||[]).find(([a,b])=>coordinate>=a&&coordinate<=b);
     let y=coordinate-P/2;
     if(matchingHole)y=Math.max(matchingHole[0]+2,Math.min(matchingHole[1]-groupHeight-2,y));
     else y=Math.max(30,Math.min(H-groupHeight-30,y));
-    p1={x:side==="left"?34:width-P-34,y,w:P,h:P};
+    p1={x:side==="left"?34:W-P-34,y,w:P,h:P};
   }else{
     const y=side==="top"?34:H-groupHeight-34;
     p1={x:safeX-P/2,y,w:P,h:P};
@@ -213,7 +208,7 @@ function hasSight(x1,y1,x2,y2){const n=Math.ceil(Math.hypot(x2-x1,y2-y1)/7);for(
 function exitLink(player,side){const position=(side==="left"||side==="right")?player.y+P/2:player.x+P/2,link=rooms[map][side],next=typeof link==="function"?link(position):link;return{position,next};}
 
 // Prüft, ob eine Figur direkt an einer bestimmten Außenkante wartet.
-function waitsAtExit(player,side){const width=currentRoomWidth();return side==="left"?player.x<=1:side==="right"?player.x>=width-P-1:side==="top"?player.y<=1:player.y>=H-P-1;}
+function waitsAtExit(player,side){return side==="left"?player.x<=1:side==="right"?player.x>=W-P-1:side==="top"?player.y<=1:player.y>=H-P-1;}
 
 /*
   Raumwechsel funktionieren nur, wenn beide Spieler an derselben gültigen Tür stehen.
@@ -236,10 +231,10 @@ function wallExit(side,playerIndex){
   gemacht. Dadurch blockieren sich die Hitboxen von P1 und P2 gegenseitig.
 */
 function movePlayer(playerIndex,dx,dy){
-  const player=players[playerIndex],other=players[1-playerIndex],width=currentRoomWidth();
+  const player=players[playerIndex],other=players[1-playerIndex];
   player.x+=dx;
   if(player.x+P<0){if(wallExit("left",playerIndex))return true;player.x=0;}
-  else if(player.x>width){if(wallExit("right",playerIndex))return true;player.x=width-P;}
+  else if(player.x>W){if(wallExit("right",playerIndex))return true;player.x=W-P;}
   else if(wallsHit(player)||rectHit(player,other))player.x-=dx;
   player.y+=dy;
   if(player.y+P<0){if(wallExit("top",playerIndex))return true;player.y=0;}
@@ -322,7 +317,7 @@ function update(dt){
   // Projektile fliegen weiter, verschwinden an Wänden und töten bei Spielerkontakt.
   for(const b of bullets){
     b.x+=b.vx*dt;b.y+=b.vy*dt;
-    if(b.x<0||b.x>currentRoomWidth()||b.y<0||b.y>H||wallsHit({x:b.x-5,y:b.y-5,w:10,h:10}))b.dead=true;
+    if(b.x<0||b.x>W||b.y<0||b.y>H||wallsHit({x:b.x-5,y:b.y-5,w:10,h:10}))b.dead=true;
     if(b.dead)continue;
     for(let i=0;i<players.length;i++)if(Math.hypot(players[i].x+P/2-b.x,players[i].y+P/2-b.y)<11){die(i);return;}
   }
@@ -344,8 +339,8 @@ function drawGate(x,y,w,h){fill(x,y,w,h,"#78695a");ctx.strokeStyle="#e0d0b0";ctx
 */
 function draw(){
   // Hintergrund und Orientierungsgitter.
-  const r=rooms[map],width=currentRoomWidth();fill(0,0,width,H,"#2e3430");ctx.strokeStyle="#455047";
-  for(let x=0;x<width;x+=35){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}for(let y=0;y<H;y+=35){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(width,y);ctx.stroke();}
+  const r=rooms[map];fill(0,0,W,H,"#2e3430");ctx.strokeStyle="#455047";
+  for(let x=0;x<W;x+=35){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}for(let y=0;y<H;y+=35){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
 
   // Alle Wände und die Zielbarriere in Raum 1.
   for(const w of allWalls()){fill(...w,"#6c7068");ctx.strokeStyle="#b9b7a8";ctx.strokeRect(w[0],w[1],w[2],w[3]);}
