@@ -32,6 +32,12 @@ const elements = {
   sceneTypeBadge: document.querySelector("#scene-type-badge"),
   selectedSceneTitle: document.querySelector("#selected-scene-title"),
   selectedSceneDetails: document.querySelector("#selected-scene-details"),
+  scenePreview: document.querySelector("#scene-preview"),
+  scenePoster: document.querySelector("#scene-poster"),
+  filmPreviewBadge: document.querySelector("#film-preview-badge"),
+  sceneCredit: document.querySelector("#scene-credit"),
+  sceneSourceLink: document.querySelector("#scene-source-link"),
+  sceneLicenseLink: document.querySelector("#scene-license-link"),
   videoFileInput: document.querySelector("#video-file-input"),
 
   stage: document.querySelector("#stage"),
@@ -45,6 +51,7 @@ const elements = {
   recordingTime: document.querySelector("#recording-time"),
   recordingLevel: document.querySelector("#recording-level"),
   sceneProgressBar: document.querySelector("#scene-progress-bar"),
+  stageLicense: document.querySelector("#stage-license"),
   currentPlayerName: document.querySelector("#current-player-name"),
   cueProgress: document.querySelector("#cue-progress"),
   studioMicBadge: document.querySelector("#studio-mic-badge"),
@@ -99,7 +106,7 @@ const editorContext = elements.editorPreviewCanvas.getContext("2d");
 // --------------------------------------------------
 // 3. SPIELZUSTAND
 // --------------------------------------------------
-let selectedScene = cloneScene(window.SyncScenes.demoScene);
+let selectedScene = cloneScene(window.SyncScenes.realScenes[0]);
 let editorDraft = cloneScene(selectedScene);
 let customVideoUrl = null;
 let players = [];
@@ -127,6 +134,18 @@ let toastTimer = null;
 
 function cloneScene(scene) {
   return JSON.parse(JSON.stringify(scene));
+}
+
+function getSceneClipStart(scene = selectedScene) {
+  return Number.isFinite(scene.clipStart) ? scene.clipStart : 0;
+}
+
+function getSceneClipEnd(scene = selectedScene) {
+  return Number.isFinite(scene.clipEnd) ? scene.clipEnd : scene.duration;
+}
+
+function getSceneClipDuration(scene = selectedScene) {
+  return getSceneClipEnd(scene) - getSceneClipStart(scene);
 }
 
 function currentPlayer() {
@@ -424,17 +443,62 @@ function deleteMicrophoneTest() {
 // 6. SZENEN UND SZENENEDITOR
 // --------------------------------------------------
 function updateSelectedSceneDisplay() {
+  const isCanvas = selectedScene.type === "canvas";
+  const isOpenMovie = selectedScene.mediaKind === "open-movie";
+  const mediaLabel = isCanvas ? "Canvas-Demo" : isOpenMovie ? "echter Film" : "lokales Video";
+
   elements.selectedSceneTitle.textContent = selectedScene.title;
-  elements.selectedSceneDetails.textContent = `${selectedScene.cues.length} Dialoge · ${selectedScene.duration.toFixed(1)} Sekunden · ${selectedScene.type === "canvas" ? "Canvas-Demo" : "Lokales Video"}`;
-  elements.sceneTypeBadge.textContent = selectedScene.type === "canvas" ? "DEMO" : "LOKAL";
+  elements.selectedSceneDetails.textContent = `${selectedScene.cues.length} Dialoge · ${getSceneClipDuration().toFixed(0)} Sekunden · ${mediaLabel}`;
+  elements.sceneTypeBadge.textContent = isCanvas ? "DEMO" : isOpenMovie ? "FILM" : "LOKAL";
   elements.sceneTypeBadge.classList.add("ready");
+
+  elements.scenePoster.classList.toggle("hidden", !selectedScene.posterUrl);
+  if (selectedScene.posterUrl) elements.scenePoster.src = selectedScene.posterUrl;
+  elements.scenePreview.classList.toggle("film-preview", Boolean(selectedScene.posterUrl));
+  elements.filmPreviewBadge.textContent = isOpenMovie ? "ECHTER FILM" : isCanvas ? "CANVAS-DEMO" : "EIGENES VIDEO";
+
+  elements.sceneCredit.classList.toggle("hidden", !selectedScene.sourceLink);
+  elements.stageLicense.classList.toggle("hidden", !selectedScene.sourceLink);
+  if (selectedScene.sourceLink) {
+    elements.sceneSourceLink.href = selectedScene.sourceLink;
+    elements.sceneSourceLink.textContent = `${selectedScene.sourceTitle} · ${selectedScene.sourceAuthor}`;
+    elements.sceneLicenseLink.href = selectedScene.licenseLink;
+    elements.sceneLicenseLink.textContent = selectedScene.licenseName;
+    elements.stageLicense.href = selectedScene.sourceLink;
+    elements.stageLicense.textContent = `${selectedScene.sourceTitle} · ${selectedScene.sourceAuthor} · ${selectedScene.licenseName}`;
+  }
+
+  document.querySelectorAll("[data-scene-id]").forEach((button) => {
+    button.classList.toggle("selected", button.dataset.sceneId === selectedScene.id);
+  });
+  document.querySelector("#select-demo-scene").classList.toggle("selected", isCanvas);
+}
+
+function setVideoSources(scene = selectedScene) {
+  if (scene.type !== "video" || !scene.sourceUrl) return;
+  elements.sceneVideo.src = scene.sourceUrl;
+  elements.editorPreviewVideo.src = scene.sourceUrl;
+  elements.sceneVideo.poster = scene.posterUrl || "";
+  elements.editorPreviewVideo.poster = scene.posterUrl || "";
+}
+
+function selectRealScene(sceneId) {
+  const scene = window.SyncScenes.realScenes.find((item) => item.id === sceneId);
+  if (!scene) return;
+  stopPlayback();
+  selectedScene = cloneScene(scene);
+  setVideoSources();
+  updateSelectedSceneDisplay();
+  showToast(`Filmszene „${selectedScene.title}“ ist ausgewählt.`);
 }
 
 function selectDemoScene() {
   stopPlayback();
   selectedScene = cloneScene(window.SyncScenes.demoScene);
   elements.sceneVideo.removeAttribute("src");
+  elements.editorPreviewVideo.removeAttribute("src");
   elements.sceneVideo.load();
+  elements.editorPreviewVideo.load();
   updateSelectedSceneDisplay();
   showToast("Die selbst gezeichnete Demo-Szene ist ausgewählt.");
 }
@@ -472,8 +536,12 @@ async function loadLocalVideo(file) {
     selectedScene = {
       id: `local-${Date.now()}`,
       type: "video",
+      mediaKind: "local",
+      sourceUrl: customVideoUrl,
       title: file.name.replace(/\.[^.]+$/, ""),
       duration,
+      clipStart: 0,
+      clipEnd: duration,
       description: "Lokale Videodatei",
       cues: createStarterCues(duration),
     };
@@ -715,15 +783,19 @@ async function playSceneRange(start, end, options = {}) {
   elements.sceneProgressBar.style.width = "0%";
 
   if (selectedScene.type === "video") {
-    elements.sceneVideo.currentTime = start;
-    elements.sceneVideo.muted = !settings.originalAudio;
-    elements.sceneVideo.volume = masterVolume;
     try {
+      await waitForVideoMetadata(elements.sceneVideo);
+      elements.sceneVideo.currentTime = start;
+      elements.sceneVideo.muted = !settings.originalAudio;
+      elements.sceneVideo.volume = masterVolume;
       await elements.sceneVideo.play();
     } catch (error) {
       const reject = playback?.reject;
       playback = null;
-      reject?.(new Error("Der Browser hat die Videowiedergabe blockiert. Bitte klicke erneut auf Abspielen."));
+      const message = elements.sceneVideo.error
+        ? "Die Filmszene konnte nicht geladen werden. Prüfe deine Internetverbindung oder verwende die Demo."
+        : "Der Browser hat die Videowiedergabe blockiert. Bitte klicke erneut auf Abspielen.";
+      reject?.(new Error(message));
     }
   } else if (settings.originalAudio) {
     const matchingCue = selectedScene.cues.find((cue) => cue.start <= start + .05 && cue.end >= end - .05);
@@ -895,7 +967,7 @@ function prepareMainScene() {
   const usesVideo = selectedScene.type === "video";
   elements.sceneCanvas.classList.toggle("hidden", usesVideo);
   elements.sceneVideo.classList.toggle("hidden", !usesVideo);
-  if (usesVideo && customVideoUrl) elements.sceneVideo.src = customVideoUrl;
+  if (usesVideo) setVideoSources();
 }
 
 function beginPlayerTurn() {
@@ -1048,7 +1120,7 @@ function getCurrentPlayerSchedule() {
 
 function showFinalCut() {
   stopPlayback();
-  sceneTime = 0;
+  sceneTime = getSceneClipStart();
   elements.cueControls.classList.add("hidden");
   elements.finalControls.classList.remove("hidden");
   elements.cueProgress.textContent = "FINAL CUT";
@@ -1060,7 +1132,7 @@ function showFinalCut() {
 async function playFinalScene() {
   elements.pauseFinalButton.textContent = "Pause";
   try {
-    await playSceneRange(0, selectedScene.duration, {
+    await playSceneRange(getSceneClipStart(), getSceneClipEnd(), {
       takes: getCurrentPlayerSchedule(),
       showAllSubtitles: true,
     });
@@ -1231,6 +1303,9 @@ document.querySelector(".brand").addEventListener("click", (event) => {
 document.querySelector("#open-mic-test").addEventListener("click", () => openModal(elements.micModal));
 document.querySelector("#open-guide").addEventListener("click", () => openModal(document.querySelector("#guide-modal")));
 document.querySelector("#select-demo-scene").addEventListener("click", selectDemoScene);
+document.querySelectorAll("[data-scene-id]").forEach((button) => {
+  button.addEventListener("click", () => selectRealScene(button.dataset.sceneId));
+});
 document.querySelector("#open-scene-editor").addEventListener("click", openSceneEditor);
 elements.videoFileInput.addEventListener("change", () => loadLocalVideo(elements.videoFileInput.files[0]));
 elements.startGameButton.addEventListener("click", startShow);
@@ -1330,7 +1405,11 @@ function initialize() {
   updateSelectedSceneDisplay();
   updateMicrophoneBadges(false);
   masterVolume = Number(elements.masterVolume.value) / 100;
-  window.SyncScenes.renderDemoScene(sceneContext, 0, 960, 540, selectedScene);
+  if (selectedScene.type === "canvas") {
+    window.SyncScenes.renderDemoScene(sceneContext, 0, 960, 540, selectedScene);
+  } else {
+    setVideoSources();
+  }
   requestAnimationFrame(animationLoop);
 
   if (!supportsRecording()) {

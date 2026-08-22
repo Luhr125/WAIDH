@@ -4,9 +4,10 @@ Sync Showdown ist eine lokale Synchronsprecher-Gameshow für 1–4 Personen. Ein
 Szene wird Dialog für Dialog neu eingesprochen, anschließend gemeinsam
 abgespielt und von fünf unterhaltsamen Arcade-Juroren bewertet.
 
-Das Projekt enthält nur eigene Demo-Inhalte. Es verwendet HTML, CSS, Vanilla
-JavaScript, HTML5 Canvas, HTML5 Video, MediaRecorder und die Web Audio API. Es
-gibt keine Anmeldung, Datenbank oder Uploads.
+Das Projekt enthält eine eigene Canvas-Demo und drei echte Filmszenen aus dem
+offenen Kurzfilm **Tears of Steel**. Es verwendet HTML, CSS, Vanilla JavaScript,
+HTML5 Canvas, HTML5 Video, MediaRecorder und die Web Audio API. Es gibt keine
+Anmeldung, Datenbank oder Uploads.
 
 ## Projekt starten
 
@@ -43,7 +44,8 @@ Browseradresse. Aufnahmen werden nur als lokale Blob-URLs im Browser gehalten.
 ## Spielablauf
 
 1. Wähle 1–4 Spieler und trage ihre Namen ein.
-2. Verwende die Demo **Notfall im All** oder wähle ein eigenes Video.
+2. Wähle eine der drei echten Filmszenen, die Canvas-Demo **Notfall im All**
+   oder ein eigenes Video.
 3. Sieh dir den aktuellen Dialog an.
 4. Starte nach dem Countdown deinen Take.
 5. Höre ihn allein oder zusammen mit der Szene an.
@@ -53,6 +55,29 @@ Browseradresse. Aufnahmen werden nur als lokale Blob-URLs im Browser gehalten.
 
 Mehrere Spieler spielen nacheinander dieselbe Szene. Am Ende erscheint eine
 Rangliste.
+
+## Enthaltene Filmszenen
+
+Im Hauptmenü stehen drei kurze Ausschnitte zur Verfügung:
+
+- **Der grosse Streit** – 5 Dialoge, etwa 23 Sekunden
+- **Regie unter Druck** – 6 Dialoge, etwa 26 Sekunden
+- **Das Roboter-Geständnis** – 7 Dialoge, etwa 29 Sekunden
+
+Die Videodatei wird in einer kleinen 480p-Version von Wikimedia Commons
+gestreamt. Deshalb braucht das Spiel für diese Szenen eine Internetverbindung.
+Die gezeichnete Demo und eigene lokale Videos funktionieren weiterhin ohne
+Internet.
+
+### Filmquelle und Lizenz
+
+**Tears of Steel** ist ein Live-Action-/CGI-Kurzfilm der Blender Foundation und
+steht unter [Creative Commons BY 3.0](https://creativecommons.org/licenses/by/3.0/).
+Quelle: [Blender Studio](https://studio.blender.org/projects/tears-of-steel/)
+
+Das Spiel verwendet zeitlich begrenzte Ausschnitte und selbst bearbeitete
+deutsche Spieltexte. Die Quellenangabe und der Lizenzlink werden auch direkt im
+Spiel angezeigt.
 
 ## Eigene Videos und Szenen
 
@@ -99,6 +124,15 @@ In `scenes.js`:
 - `demoScene.cues` – Dialogtexte und Zeitpunkte
 - `renderDemoScene()` – Hintergrund und Animation
 - `drawCaptain()` und `drawRobot()` – Figuren
+
+### Echte Filmszenen
+
+In `scenes.js`:
+
+- `realScenes` – Titel, Ausschnitt, Dialoge und Zeitpunkte
+- `clipStart` und `clipEnd` – Start und Ende des verwendeten Filmausschnitts
+- `sourceUrl` – gestreamte Videodatei
+- `sourceLink` und `licenseLink` – Quellen- und Lizenzangabe
 
 ### Aufnahme und Spielablauf
 
@@ -148,5 +182,5 @@ sind Teil der Gameshow-Unterhaltung.
 - `index.html` – Menüs, Studio, Jury und Dialoge
 - `style.css` – vollständiges responsives Gameshow-Design
 - `app.js` – Mikrofon, Aufnahme, Wiedergabe, Jury und Mehrspieler
-- `scenes.js` – eigene Canvas-Demoszene
+- `scenes.js` – echte Filmszenen, Dialogzeiten und eigene Canvas-Demo
 - `README.md` – diese Anleitung

@@ -81,26 +81,36 @@
                   <span class="step-number">02</span>
                   <h2>Szene auswählen</h2>
                 </div>
-                <span id="scene-type-badge" class="status-badge ready">DEMO</span>
+                <span id="scene-type-badge" class="status-badge ready">FILM</span>
               </div>
 
               <div class="scene-preview-card">
-                <div class="preview-space">
-                  <span class="preview-star star-one">✦</span>
-                  <span class="preview-star star-two">✦</span>
-                  <div class="preview-character captain"><span></span></div>
-                  <div class="preview-character robot"><span></span></div>
+                <div id="scene-preview" class="preview-space film-preview">
+                  <img id="scene-poster" alt="Vorschau der ausgewählten Filmszene" />
+                  <span id="film-preview-badge" class="film-preview-badge">ECHTER FILM</span>
                 </div>
                 <div>
                   <p class="scene-label">AUSGEWÄHLTE SZENE</p>
-                  <h3 id="selected-scene-title">Notfall im All</h3>
-                  <p id="selected-scene-details">5 Dialoge · 21 Sekunden · Canvas-Demo</p>
+                  <h3 id="selected-scene-title">Der grosse Streit</h3>
+                  <p id="selected-scene-details">5 Dialoge · 23 Sekunden · echter Film</p>
                 </div>
               </div>
 
+              <div class="film-scene-picker" aria-label="Filmszene auswählen">
+                <button class="scene-choice selected" data-scene-id="tos-argument" type="button">
+                  <span>01</span> Der grosse Streit
+                </button>
+                <button class="scene-choice" data-scene-id="tos-director" type="button">
+                  <span>02</span> Regie unter Druck
+                </button>
+                <button class="scene-choice" data-scene-id="tos-confession" type="button">
+                  <span>03</span> Das Geständnis
+                </button>
+              </div>
+
               <div class="scene-actions">
-                <button id="select-demo-scene" class="secondary-button selected" type="button">
-                  Demo verwenden
+                <button id="select-demo-scene" class="secondary-button" type="button">
+                  Gezeichnete Demo
                 </button>
                 <label class="file-button" for="video-file-input">Eigenes Video</label>
                 <input id="video-file-input" class="visually-hidden" type="file" accept="video/*" />
@@ -109,8 +119,10 @@
                 </button>
               </div>
 
-              <p class="local-file-note">
-                Videos werden nur lokal geöffnet und niemals hochgeladen.
+              <p id="scene-credit" class="scene-credit">
+                Film: <a id="scene-source-link" href="https://studio.blender.org/projects/tears-of-steel/" target="_blank" rel="noreferrer">Tears of Steel · Blender Foundation</a>
+                · <a id="scene-license-link" href="https://creativecommons.org/licenses/by/3.0/" target="_blank" rel="noreferrer">CC BY 3.0</a>
+                · Ausschnitt und deutsche Spieltexte bearbeitet.
               </p>
             </section>
           </div>
@@ -148,6 +160,10 @@
             </div>
 
             <div class="scene-progress"><span id="scene-progress-bar"></span></div>
+
+            <a id="stage-license" class="stage-license" href="https://studio.blender.org/projects/tears-of-steel/" target="_blank" rel="noreferrer">
+              Tears of Steel · Blender Foundation · CC BY 3.0
+            </a>
           </div>
 
           <section id="cue-controls" class="cue-controls">

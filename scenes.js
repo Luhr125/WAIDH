@@ -58,6 +58,80 @@ const demoScene = {
   ],
 };
 
+/* ==================================================
+   ECHTE FILMSZENEN
+   Alle drei Ausschnitte stammen aus "Tears of Steel".
+   Der Film wurde von der Blender Foundation unter
+   Creative Commons BY 3.0 veröffentlicht.
+   ================================================== */
+
+const tearsOfSteelVideoUrl = "https://upload.wikimedia.org/wikipedia/commons/transcoded/1/10/Tears_of_Steel_in_4k_-_Official_Blender_Foundation_release.webm/Tears_of_Steel_in_4k_-_Official_Blender_Foundation_release.webm.480p.vp9.webm";
+const tearsOfSteelPosterUrl = "https://upload.wikimedia.org/wikipedia/commons/thumb/1/10/Tears_of_Steel_in_4k_-_Official_Blender_Foundation_release.webm/1280px--Tears_of_Steel_in_4k_-_Official_Blender_Foundation_release.webm.jpg";
+
+const tearsOfSteelSource = {
+  type: "video",
+  mediaKind: "open-movie",
+  duration: 734.055,
+  sourceUrl: tearsOfSteelVideoUrl,
+  posterUrl: tearsOfSteelPosterUrl,
+  sourceTitle: "Tears of Steel",
+  sourceAuthor: "Blender Foundation",
+  sourceLink: "https://studio.blender.org/projects/tears-of-steel/",
+  licenseName: "CC BY 3.0",
+  licenseLink: "https://creativecommons.org/licenses/by/3.0/",
+};
+
+const realScenes = [
+  {
+    ...tearsOfSteelSource,
+    id: "tos-argument",
+    title: "Der grosse Streit",
+    clipStart: 22.5,
+    clipEnd: 45.4,
+    description: "5 Dialoge · 23 Sekunden · echter Film",
+    cues: [
+      { id: 1, start: 23, end: 24.5, speaker: "Celia", text: "Du bist so ein Idiot, Thom." },
+      { id: 2, start: 25, end: 30.5, speaker: "Thom", text: "Wir müssen unseren Träumen folgen. Du hast deine Roboter, ich will ins Weltall." },
+      { id: 3, start: 30.8, end: 34, speaker: "Celia", text: "Gib doch zu: Meine Roboterhand macht dir Angst." },
+      { id: 4, start: 34.5, end: 42, speaker: "Thom", text: "Nein ... okay! Ich träume von riesigen Roboterklauen, die mich verfolgen." },
+      { id: 5, start: 43, end: 45, speaker: "Celia", text: "Was auch immer, Thom. Wir sind fertig." },
+    ],
+  },
+  {
+    ...tearsOfSteelSource,
+    id: "tos-director",
+    title: "Regie unter Druck",
+    clipStart: 222.5,
+    clipEnd: 248.4,
+    description: "6 Dialoge · 26 Sekunden · echter Film",
+    cues: [
+      { id: 1, start: 223, end: 225.7, speaker: "Regisseur", text: "Sehr schön. Es gibt keinen Grund zur Sorge." },
+      { id: 2, start: 226, end: 227, speaker: "Regisseur", text: "Thom!" },
+      { id: 3, start: 231, end: 233, speaker: "Regisseur", text: "Da ist sie." },
+      { id: 4, start: 233.5, end: 236, speaker: "Regisseur", text: "Los. Du liebst sie." },
+      { id: 5, start: 237, end: 241, speaker: "Regisseur", text: "Sie ist deine grosse Leidenschaft. Sei zärtlich." },
+      { id: 6, start: 241.5, end: 248, speaker: "Regisseur", text: "Sei ehrlich. Erinner sie daran, was Liebe bedeutet." },
+    ].sort((first, second) => first.start - second.start),
+  },
+  {
+    ...tearsOfSteelSource,
+    id: "tos-confession",
+    title: "Das Roboter-Geständnis",
+    clipStart: 382.5,
+    clipEnd: 411.4,
+    description: "7 Dialoge · 29 Sekunden · echter Film",
+    cues: [
+      { id: 1, start: 383, end: 385, speaker: "Celia", text: "Du hast mir das Herz gebrochen." },
+      { id: 2, start: 386, end: 387, speaker: "Thom", text: "Ich weiss." },
+      { id: 3, start: 387, end: 389, speaker: "Celia", text: "Du hast mich auf der Erde vergessen." },
+      { id: 4, start: 389, end: 390, speaker: "Thom", text: "Ich weiss." },
+      { id: 5, start: 390.5, end: 393, speaker: "Celia", text: "Eigentlich sollte ich dich einfach zerquetschen." },
+      { id: 6, start: 396, end: 397, speaker: "Thom", text: "Ich ..." },
+      { id: 7, start: 407, end: 408, speaker: "Thom", text: "Es tut mir leid." },
+    ],
+  },
+];
+
 function getActiveCue(scene, time) {
   return scene.cues.find((cue) => time >= cue.start && time <= cue.end) || null;
 }
@@ -226,6 +300,7 @@ function renderDemoScene(context, time, width, height, scene = demoScene) {
 
 window.SyncScenes = {
   demoScene,
+  realScenes,
   getActiveCue,
   renderDemoScene,
 };
