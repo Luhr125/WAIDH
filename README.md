@@ -56,6 +56,11 @@ Browseradresse. Aufnahmen werden nur als lokale Blob-URLs im Browser gehalten.
 Mehrere Spieler spielen nacheinander dieselbe Szene. Am Ende erscheint eine
 Rangliste.
 
+Die Sprach-Timeline unter dem Film zeigt alle Dialogbereiche als farbige
+Wellenform. Der weisse Abspielkopf bewegt sich durch die Szene und die Anzeige
+wechselt während eines Dialogs auf **JETZT SPRECHEN**. Start- und Endzeit des
+aktuellen Satzes stehen zusätzlich direkt unter dem Dialogtext.
+
 ## Enthaltene Filmszenen
 
 Im Hauptmenü stehen drei kurze Ausschnitte zur Verfügung:
@@ -141,6 +146,8 @@ In `app.js`:
 - `SETTINGS` – Countdown, Mikrofontest und Standardlautstärke
 - Abschnitt **Mikrofon und Aufnahme** – MediaRecorder
 - Abschnitt **Szenen-Wiedergabe und Synchronisierung** – Final Cut
+- `renderSpeechTimeline()` – Wellenform und farbige Dialogbereiche
+- `updateSpeechTimeline()` – Abspielkopf und „JETZT SPRECHEN“-Anzeige
 - `calculateJuryResults()` – Punkteberechnung
 - `makeJudge()` – Jury-Daten
 

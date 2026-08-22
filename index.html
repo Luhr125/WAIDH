@@ -166,10 +166,34 @@
             </a>
           </div>
 
+          <section id="speech-timeline" class="speech-timeline" aria-label="Sprach-Timing der Szene">
+            <div class="timeline-heading">
+              <span class="timeline-label">〰 SPRACH-TIMING</span>
+              <strong id="timing-status">BEREIT</strong>
+              <span id="timing-clock">0:00.0 / 0:23.0</span>
+            </div>
+
+            <div id="waveform-track" class="waveform-track">
+              <div id="waveform-bars" class="waveform-bars" aria-hidden="true"></div>
+              <div id="speech-windows" class="speech-windows" aria-hidden="true"></div>
+              <div id="waveform-playhead" class="waveform-playhead" aria-hidden="true"><span></span></div>
+            </div>
+
+            <div class="timeline-footer">
+              <span id="timeline-start">0:00.0</span>
+              <span><i></i> Farbiger Bereich = sprechen</span>
+              <span id="timeline-end">0:23.0</span>
+            </div>
+          </section>
+
           <section id="cue-controls" class="cue-controls">
             <div class="cue-copy">
               <p id="cue-speaker" class="cue-speaker">CAPTAIN NOVA</p>
               <h2 id="cue-text">Wir verlieren Energie auf allen Systemen!</h2>
+              <div class="cue-time-range">
+                <span id="cue-start-time">START 0:00.0</span>
+                <span id="cue-end-time">ENDE 0:00.0</span>
+              </div>
             </div>
 
             <div id="record-actions" class="action-row">

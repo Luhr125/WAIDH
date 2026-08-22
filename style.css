@@ -384,6 +384,104 @@ button:disabled { opacity: .45; cursor: not-allowed; }
   background: rgba(3, 6, 11, .72);
 }
 
+/* Sprach-Timeline mit Dialogfenstern und Abspielkopf */
+.speech-timeline {
+  margin-top: 10px;
+  padding: 13px 15px 11px;
+  border: 1px solid #303b50;
+  border-radius: 15px;
+  background: linear-gradient(180deg, rgba(18, 25, 40, .96), rgba(10, 15, 26, .96));
+}
+
+.timeline-heading, .timeline-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.timeline-heading { margin-bottom: 9px; }
+.timeline-label { color: var(--cyan); font-size: .62rem; font-weight: 1000; letter-spacing: .12em; }
+#timing-status {
+  padding: 4px 9px;
+  border-radius: 999px;
+  color: var(--muted);
+  font-size: .62rem;
+  letter-spacing: .07em;
+  background: #20283a;
+}
+#timing-status.speaking { color: #07110d; background: var(--green); box-shadow: 0 0 18px rgba(88, 239, 178, .3); }
+#timing-clock { min-width: 105px; color: #c4ccda; font: 750 .68rem ui-monospace, SFMono-Regular, Consolas, monospace; text-align: right; }
+
+.waveform-track {
+  position: relative;
+  height: 82px;
+  overflow: hidden;
+  border: 1px solid #26334b;
+  border-radius: 10px;
+  background:
+    linear-gradient(90deg, transparent 24.8%, rgba(255,255,255,.055) 25%, transparent 25.2%, transparent 49.8%, rgba(255,255,255,.055) 50%, transparent 50.2%, transparent 74.8%, rgba(255,255,255,.055) 75%, transparent 75.2%),
+    #080d17;
+}
+
+.waveform-bars {
+  position: absolute;
+  z-index: 2;
+  inset: 9px 8px;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.wave-bar {
+  flex: 1 1 0;
+  height: var(--bar-height);
+  min-width: 1px;
+  border-radius: 999px;
+  opacity: .45;
+  background: #71809b;
+}
+.wave-bar.speaking { opacity: .78; background: #7d88a0; }
+.wave-bar.focused { opacity: 1; background: var(--cyan); box-shadow: 0 0 7px rgba(85, 230, 255, .4); }
+
+.speech-windows { position: absolute; z-index: 1; inset: 0; }
+.speech-window {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  border-right: 1px solid color-mix(in srgb, var(--speaker-color), transparent 30%);
+  border-left: 1px solid color-mix(in srgb, var(--speaker-color), transparent 30%);
+  background: color-mix(in srgb, var(--speaker-color), transparent 90%);
+}
+.speech-window.focused { background: color-mix(in srgb, var(--speaker-color), transparent 80%); }
+.speech-window.active { background: color-mix(in srgb, var(--green), transparent 68%); box-shadow: inset 0 0 18px rgba(88, 239, 178, .18); }
+.speech-window span {
+  position: absolute;
+  top: 3px;
+  left: 4px;
+  color: var(--speaker-color);
+  font-size: .5rem;
+  font-weight: 1000;
+}
+
+.waveform-playhead {
+  position: absolute;
+  z-index: 4;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  transform: translateX(-1px);
+  background: #fff;
+  box-shadow: 0 0 10px rgba(255, 255, 255, .7);
+}
+.waveform-playhead span { position: absolute; top: 0; left: 50%; width: 8px; height: 8px; transform: translate(-50%, -3px) rotate(45deg); background: #fff; }
+.timeline-footer { margin-top: 7px; color: #727e93; font-size: .58rem; font-weight: 750; }
+.timeline-footer span:nth-child(2) { display: flex; align-items: center; gap: 5px; }
+.timeline-footer i { width: 8px; height: 8px; border-radius: 2px; background: rgba(85, 230, 255, .55); }
+
+.cue-time-range { display: flex; gap: 7px; margin-top: 11px; }
+.cue-time-range span { padding: 5px 8px; border-radius: 7px; color: #aeb8ca; font: 800 .61rem ui-monospace, SFMono-Regular, Consolas, monospace; background: #0b101b; }
+
 .cue-controls, .final-controls {
   margin-top: 12px;
   padding: 20px;
@@ -501,6 +599,9 @@ button:disabled { opacity: .45; cursor: not-allowed; }
   .jury-card strong { grid-column: 3; grid-row: 1 / 3; }
   .jury-card p { grid-column: 2; }
   .modal-card { padding: 23px 17px; }
+  .timeline-heading { flex-wrap: wrap; }
+  .timeline-label { width: 100%; }
+  .waveform-track { height: 70px; }
 }
 
 @media (prefers-reduced-motion: reduce) {

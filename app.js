@@ -52,12 +52,22 @@ const elements = {
   recordingLevel: document.querySelector("#recording-level"),
   sceneProgressBar: document.querySelector("#scene-progress-bar"),
   stageLicense: document.querySelector("#stage-license"),
+  waveformTrack: document.querySelector("#waveform-track"),
+  waveformBars: document.querySelector("#waveform-bars"),
+  speechWindows: document.querySelector("#speech-windows"),
+  waveformPlayhead: document.querySelector("#waveform-playhead"),
+  timingStatus: document.querySelector("#timing-status"),
+  timingClock: document.querySelector("#timing-clock"),
+  timelineStart: document.querySelector("#timeline-start"),
+  timelineEnd: document.querySelector("#timeline-end"),
   currentPlayerName: document.querySelector("#current-player-name"),
   cueProgress: document.querySelector("#cue-progress"),
   studioMicBadge: document.querySelector("#studio-mic-badge"),
   cueControls: document.querySelector("#cue-controls"),
   cueSpeaker: document.querySelector("#cue-speaker"),
   cueText: document.querySelector("#cue-text"),
+  cueStartTime: document.querySelector("#cue-start-time"),
+  cueEndTime: document.querySelector("#cue-end-time"),
   recordActions: document.querySelector("#record-actions"),
   takeActions: document.querySelector("#take-actions"),
   previewCueButton: document.querySelector("#preview-cue-button"),
@@ -197,6 +207,13 @@ function clamp(number, minimum, maximum) {
 function average(numbers) {
   if (!numbers.length) return 0;
   return numbers.reduce((sum, number) => sum + number, 0) / numbers.length;
+}
+
+function formatTimelineTime(seconds) {
+  const safeSeconds = Math.max(0, seconds);
+  const minutes = Math.floor(safeSeconds / 60);
+  const remainingSeconds = (safeSeconds % 60).toFixed(1).padStart(4, "0");
+  return `${minutes}:${remainingSeconds}`;
 }
 
 function standardDeviation(numbers) {
@@ -472,6 +489,84 @@ function updateSelectedSceneDisplay() {
     button.classList.toggle("selected", button.dataset.sceneId === selectedScene.id);
   });
   document.querySelector("#select-demo-scene").classList.toggle("selected", isCanvas);
+  renderSpeechTimeline();
+}
+
+// --------------------------------------------------
+// SPRACH-TIMELINE
+// Die Wellenform zeigt die Dialogbereiche und den aktuellen Abspielpunkt.
+// Die farbigen Fenster stammen aus den exakten Start-/Endzeiten der Dialoge.
+// --------------------------------------------------
+function renderSpeechTimeline() {
+  const clipStart = getSceneClipStart();
+  const clipDuration = Math.max(.1, getSceneClipDuration());
+  const barCount = clamp(Math.round(clipDuration * 4), 72, 140);
+  const focusedCue = selectedScene.cues[currentCueIndex];
+
+  elements.waveformBars.innerHTML = "";
+  elements.speechWindows.innerHTML = "";
+
+  for (let index = 0; index < barCount; index += 1) {
+    const time = clipStart + (index + .5) / barCount * clipDuration;
+    const speakingCue = selectedScene.cues.find((cue) => time >= cue.start && time <= cue.end);
+    const wave = Math.abs(Math.sin(index * 1.73 + selectedScene.id.length) * Math.cos(index * .37));
+    const height = speakingCue ? 42 + wave * 54 : 13 + wave * 24;
+    const bar = document.createElement("span");
+    bar.className = speakingCue ? "wave-bar speaking" : "wave-bar";
+    if (speakingCue?.id === focusedCue?.id) bar.classList.add("focused");
+    bar.style.setProperty("--bar-height", `${height.toFixed(0)}%`);
+    elements.waveformBars.append(bar);
+  }
+
+  selectedScene.cues.forEach((cue, index) => {
+    const marker = document.createElement("div");
+    const left = clamp((cue.start - clipStart) / clipDuration * 100, 0, 100);
+    const right = clamp((cue.end - clipStart) / clipDuration * 100, 0, 100);
+    marker.className = "speech-window";
+    if (cue.id === focusedCue?.id) marker.classList.add("focused");
+    marker.dataset.cueId = String(cue.id);
+    marker.style.left = `${left}%`;
+    marker.style.width = `${Math.max(.7, right - left)}%`;
+    marker.style.setProperty("--speaker-color", index % 2 ? "var(--cyan)" : "var(--pink)");
+    marker.title = `${cue.speaker}: ${cue.text}`;
+
+    const label = document.createElement("span");
+    label.textContent = String(index + 1);
+    marker.append(label);
+    elements.speechWindows.append(marker);
+  });
+
+  elements.timelineStart.textContent = formatTimelineTime(0);
+  elements.timelineEnd.textContent = formatTimelineTime(clipDuration);
+  elements.waveformTrack.setAttribute("aria-label", `${selectedScene.cues.length} Dialogbereiche in ${formatTimelineTime(clipDuration)}`);
+  updateSpeechTimeline(sceneTime);
+}
+
+function updateSpeechTimeline(time) {
+  const clipStart = getSceneClipStart();
+  const clipDuration = Math.max(.1, getSceneClipDuration());
+  const relativeTime = clamp(time - clipStart, 0, clipDuration);
+  const progress = relativeTime / clipDuration * 100;
+  const activeCue = selectedScene.cues.find((cue) => time >= cue.start && time <= cue.end);
+  const focusedCue = selectedScene.cues[currentCueIndex];
+
+  elements.waveformPlayhead.style.left = `${progress}%`;
+  elements.timingClock.textContent = `${formatTimelineTime(relativeTime)} / ${formatTimelineTime(clipDuration)}`;
+  elements.timingStatus.classList.toggle("speaking", Boolean(activeCue && playback && !playback.paused));
+
+  if (activeCue && playback && !playback.paused) {
+    elements.timingStatus.textContent = `${activeCue.speaker.toUpperCase()}: JETZT SPRECHEN`;
+  } else if (focusedCue && playback && time < focusedCue.start) {
+    elements.timingStatus.textContent = `EINSATZ IN ${(focusedCue.start - time).toFixed(1)}s`;
+  } else if (playback?.paused) {
+    elements.timingStatus.textContent = "PAUSE";
+  } else {
+    elements.timingStatus.textContent = focusedCue ? `${focusedCue.speaker.toUpperCase()}: BEREIT` : "BEREIT";
+  }
+
+  elements.speechWindows.querySelectorAll(".speech-window").forEach((marker) => {
+    marker.classList.toggle("active", activeCue?.id === Number(marker.dataset.cueId));
+  });
 }
 
 function setVideoSources(scene = selectedScene) {
@@ -988,11 +1083,14 @@ function showCurrentCue() {
   elements.cueProgress.textContent = `DIALOG ${currentCueIndex + 1} / ${selectedScene.cues.length}`;
   elements.cueSpeaker.textContent = cue.speaker;
   elements.cueText.textContent = cue.text;
+  elements.cueStartTime.textContent = `START ${formatTimelineTime(cue.start - getSceneClipStart())}`;
+  elements.cueEndTime.textContent = `ENDE ${formatTimelineTime(cue.end - getSceneClipStart())}`;
   elements.recordActions.classList.remove("hidden");
   elements.takeActions.classList.add("hidden");
   elements.studioMessage.textContent = "Sieh dir zuerst den Dialog an oder starte direkt deine Aufnahme.";
   elements.sceneProgressBar.style.width = "0%";
   elements.subtitle.classList.add("hidden");
+  renderSpeechTimeline();
 }
 
 async function previewCurrentCue() {
@@ -1126,6 +1224,7 @@ function showFinalCut() {
   elements.cueProgress.textContent = "FINAL CUT";
   elements.studioMessage.textContent = "";
   elements.pauseFinalButton.textContent = "Pause";
+  renderSpeechTimeline();
   playFinalScene();
 }
 
@@ -1393,6 +1492,7 @@ function animationLoop(now) {
   updateMicrophoneUi(now);
   updatePlayback(now);
   updateEditorPreview(now);
+  updateSpeechTimeline(sceneTime);
 
   if (selectedScene.type === "canvas") {
     window.SyncScenes.renderDemoScene(sceneContext, sceneTime, 960, 540, selectedScene);
