@@ -66,11 +66,11 @@ let jumpWasPressed = false;
 // --------------------------------------------------
 const platforms = [
   // Bodenstücke
-  { x: 0, y: 480, width: 620, height: 60 },
-  { x: 760, y: 480, width: 680, height: 60 },
-  { x: 1570, y: 480, width: 770, height: 60 },
-  { x: 2490, y: 480, width: 800, height: 60 },
-  { x: 3430, y: 480, width: 820, height: 60 },
+  { x: 0, y: 480, width: 640, height: 60 },
+  { x: 760, y: 480, width: 700, height: 60 },
+  { x: 1570, y: 480, width: 800, height: 60 },
+  { x: 2490, y: 480, width: 830, height: 60 },
+  { x: 3430, y: 480, width: 850, height: 60 },
   { x: 4400, y: 480, width: 800, height: 60 },
 
   // Schwebende Plattformen
@@ -103,11 +103,11 @@ const redObstacles = [
   { x: 4880, y: 450, width: 70, height: 30 },
 
   // Rote Lava in den Abgründen
-  { x: 620, y: 515, width: 140, height: 25 },
-  { x: 1440, y: 515, width: 130, height: 25 },
-  { x: 2340, y: 515, width: 150, height: 25 },
-  { x: 3290, y: 515, width: 140, height: 25 },
-  { x: 4250, y: 515, width: 150, height: 25 },
+  { x: 640, y: 515, width: 120, height: 25 },
+  { x: 1460, y: 515, width: 110, height: 25 },
+  { x: 2370, y: 515, width: 120, height: 25 },
+  { x: 3320, y: 515, width: 110, height: 25 },
+  { x: 4280, y: 515, width: 120, height: 25 },
 ];
 
 const goal = { x: 5070, y: 370, width: 65, height: 110 };
