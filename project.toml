@@ -1,0 +1,3 @@
+[com.heroku.static-web-server]
+root = "."
+index = "index.html"
