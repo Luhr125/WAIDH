@@ -236,13 +236,33 @@ async function requestMicrophone() {
   if (microphoneStream?.active) return microphoneStream;
   if (!supportsRecording()) throw new Error("Dieser Browser unterstützt keine Mikrofonaufnahme mit MediaRecorder.");
 
-  microphoneStream = await navigator.mediaDevices.getUserMedia({
+  let permissionTimedOut = false;
+  const mediaRequest = navigator.mediaDevices.getUserMedia({
     audio: {
       echoCancellation: true,
       noiseSuppression: true,
       autoGainControl: true,
     },
   });
+
+  // Manche Browser lassen eine unbeantwortete Berechtigungsfrage unbegrenzt offen.
+  let permissionTimer;
+  const timeout = new Promise((_, reject) => {
+    permissionTimer = setTimeout(() => {
+      permissionTimedOut = true;
+      reject(new Error("Die Mikrofonanfrage wurde nicht beantwortet. Prüfe das Berechtigungssymbol im Browser."));
+    }, 15_000);
+  });
+
+  mediaRequest.then((lateStream) => {
+    if (permissionTimedOut) lateStream.getTracks().forEach((track) => track.stop());
+  }).catch(() => {});
+
+  try {
+    microphoneStream = await Promise.race([mediaRequest, timeout]);
+  } finally {
+    clearTimeout(permissionTimer);
+  }
 
   const context = getAudioContext();
   if (context) {
