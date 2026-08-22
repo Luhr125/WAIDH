@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>No Safe Step</title>
+    <link rel="stylesheet" href="style 1.css" />
+  </head>
+  <body>
+    <main class="game-shell">
+      <header>
+        <div>
+          <h1>NO SAFE STEP</h1>
+        </div>
+        <div id="barrier-status" class="barrier-status" aria-live="polite"></div>
+        <div class="stats" aria-live="polite">
+          <span>P1 TODE <b id="p1-deaths">0</b></span>
+          <span>P2 TODE <b id="p2-deaths">0</b></span>
+        </div>
+      </header>
+
+      <section class="game-frame" aria-label="Spielfeld">
+        <canvas id="game" width="1400" height="820"></canvas>
+        <div id="message" class="message hidden"></div>
+      </section>
+
+      <footer>
+        <span>P1: <kbd>WASD</kbd> · P2: <kbd>← ↑ ↓ →</kbd></span>
+        <span>Bringe <i class="coin-dot"></i> Münzen zum Checkpoint-Viereck, um sie zu sichern.</span>
+      </footer>
+    </main>
+    <script src="game 1.js"></script>
+  </body>
+</html>
