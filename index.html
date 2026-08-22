@@ -3,34 +3,46 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#0b1020" />
-    <title>Signal Sprint</title>
+    <meta name="theme-color" content="#07111f" />
+    <title>Shift Runner</title>
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
     <main class="game-shell">
-      <header>
-        <p class="eyebrow">WAIDH ARCADE</p>
-        <h1>Signal Sprint</h1>
-        <p class="intro">Triff das leuchtende Signal, bevor die Zeit abläuft.</p>
+      <header class="game-header">
+        <div>
+          <p class="eyebrow">WAIDH ARCADE</p>
+          <h1>Shift Runner</h1>
+        </div>
+        <p class="rule"><strong>Regel:</strong> Berühre niemals Rot.</p>
       </header>
 
-      <section class="scoreboard" aria-label="Spielstand">
-        <div><span>Punkte</span><strong id="score">0</strong></div>
-        <div><span>Zeit</span><strong><span id="time">30</span>s</strong></div>
-        <div><span>Rekord</span><strong id="high-score">0</strong></div>
+      <section class="status-bar" aria-label="Spielstatus">
+        <div><span>Versuche</span><strong id="lives">3</strong></div>
+        <div><span>Steuerung</span><strong id="controls">← ↑ →</strong></div>
+        <div><span>Wechsel in</span><strong><span id="switch-timer">10</span>s</strong></div>
       </section>
 
-      <section id="arena" class="arena" aria-label="Spielfeld">
-        <button id="target" class="target" type="button" aria-label="Signal treffen"></button>
-        <div id="start-panel" class="start-panel">
-          <h2 id="panel-title">Bereit?</h2>
-          <p id="panel-copy">Du hast 30 Sekunden. Jeder Treffer macht das Signal kleiner.</p>
-          <button id="start-button" class="start-button" type="button">Spiel starten</button>
+      <section class="game-frame">
+        <canvas id="game" width="960" height="540" aria-label="Jump-and-Run-Spielfeld"></canvas>
+
+        <div id="message-panel" class="message-panel">
+          <p class="panel-kicker">SCHICHT 01</p>
+          <h2 id="message-title">Bereit zum Lauf?</h2>
+          <p id="message-copy">Erreiche das Portal. Alle 10 Sekunden ändern sich deine Tasten.</p>
+          <button id="start-button" type="button">Spiel starten</button>
         </div>
+
+        <div id="control-flash" class="control-flash" aria-live="polite"></div>
       </section>
 
-      <p class="hint">Tipp: Klicke oder tippe direkt auf das Signal.</p>
+      <nav class="touch-controls" aria-label="Touch-Steuerung">
+        <button id="touch-left" type="button" aria-label="Nach links">←</button>
+        <button id="touch-jump" class="jump" type="button" aria-label="Springen">↑</button>
+        <button id="touch-right" type="button" aria-label="Nach rechts">→</button>
+      </nav>
+
+      <p class="hint">Blau bist du. Grün ist das Ziel. Rot setzt dich zurück.</p>
     </main>
     <script src="game.js"></script>
   </body>
