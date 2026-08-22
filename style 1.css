@@ -1,3 +1,9 @@
+/*
+  CSS bestimmt ausschließlich das Aussehen und die Anordnung der Webseite.
+  Die Regeln des Spiels und alle Bewegungen befinden sich in game 1.js.
+*/
+
+/* Globale Schrift- und Farbvorgaben für die gesamte Seite. */
 :root {
   color-scheme: dark;
   font-family: "Trebuchet MS", system-ui, sans-serif;
@@ -5,8 +11,10 @@
   color: #f3eee3;
 }
 
+/* box-sizing verhindert, dass Rahmen und Innenabstände Elemente ungewollt vergrößern. */
 * { box-sizing: border-box; }
 
+/* Zentriert das komplette Spiel auf einem einfarbigen Seitenhintergrund. */
 body {
   margin: 0;
   min-height: 100vh;
@@ -15,23 +23,48 @@ body {
   background: #191c21;
 }
 
+/* Die Webseite wird höchstens 1050 Pixel breit und behält an den Seiten Abstand. */
 .game-shell { width: min(100%, 1050px); padding: 24px; }
+
+/* Flexbox verteilt Titel, Meldungen, Statistiken und Hinweise nebeneinander. */
 header, footer { display: flex; align-items: center; justify-content: space-between; gap: 18px; }
 header { position: relative; margin-bottom: 14px; }
+
+/* clamp() macht den Titel responsiv: klein auf kleinen, groß auf großen Bildschirmen. */
 h1 { margin: 0; letter-spacing: .12em; font-size: clamp(1.55rem, 4vw, 2.6rem); color: #f8f1df; }
+
+/* Darstellung der getrennten Todeszähler. */
 .stats { display: flex; flex-wrap: wrap; gap: 13px; color: #c3bba9; font-size: .82rem; letter-spacing: .08em; }
 .stats b { color: #fff; }
+
+/* Statusmeldungen werden mittig über dem Spielfeld angezeigt. */
 .barrier-status { position: absolute; left: 50%; transform: translateX(-50%); max-width: 300px; color: #f5e7bc; font-size: .78rem; font-weight: bold; letter-spacing: .09em; text-align: center; }
+
+/* Kleines Münzsymbol im Erklärungstext. */
 .coin-dot { display:inline-block; width:10px; height:10px; border-radius:50%; background:#d4ad45; vertical-align:middle; }
 
+/* Rahmen und Schatten um das eigentliche Canvas-Spielfeld. */
 .game-frame { position: relative; border: 3px solid #b8a47e; box-shadow: 0 0 0 5px #3a352d, 0 10px 25px #0006; background: #2e3430; }
+
+/*
+  Das Canvas behält intern 1400 x 820 Pixel, wird optisch aber auf die verfügbare
+  Breite skaliert. image-rendering und filter erzeugen den gedämpften Retro-Look.
+*/
 canvas { display: block; width: 100%; height: auto; image-rendering: pixelated; filter: saturate(.62) sepia(.16) contrast(.93); }
+
+/* Vollflächige Meldung, die nach dem Sieg über dem Spiel erscheint. */
 .message { position: absolute; inset: 0; display: grid; place-items: center; text-align: center; padding: 30px; background: #211f1ae8; color: white; font-size: clamp(1.25rem, 4vw, 2.4rem); font-weight: bold; letter-spacing: .08em; }
 .hidden { display: none; }
 
+/* Bedienungshinweise unter dem Spielfeld. */
 footer { margin-top: 14px; color: #c3bba9; font-size: .82rem; flex-wrap: wrap; }
+
+/* kbd formatiert Tastennamen wie kleine Tastaturtasten. */
 kbd { padding: 2px 6px; border: 1px solid #9e9074; border-radius: 3px; background: #3c3830; color: #f3eee3; font-family: inherit; }
+
+/* Allgemeine Button-Regeln; momentan gibt es keinen sichtbaren Button im Spiel. */
 button { padding: 8px 14px; border: 1px solid #b8a47e; border-radius: 4px; background: #5b513f; color: #fff; font: inherit; cursor: pointer; }
 button:hover { background: #75684f; }
 
+/* Auf schmalen Bildschirmen werden Kopfzeile und Abstände kompakter. */
 @media (max-width: 600px) { .game-shell { padding: 12px; } header { align-items: flex-start; flex-direction: column; gap: 8px; } .barrier-status { position: static; transform: none; } footer { gap: 9px; } }
