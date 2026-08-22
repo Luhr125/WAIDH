@@ -1,8 +1,17 @@
+/* --------------------------------------------------
+   GRUNDLAGEN
+   Hier stehen Farben, Schrift und Seitenaufbau.
+-------------------------------------------------- */
 :root {
   color-scheme: dark;
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  background: #050914;
-  color: #f8fafc;
+  background: #080b12;
+  color: #f7f8fb;
+  --red: #ff3048;
+  --green: #59f2bd;
+  --panel: #111722;
+  --line: #293244;
+  --muted: #909bad;
 }
 
 * { box-sizing: border-box; }
@@ -14,73 +23,108 @@ body {
   place-items: center;
   padding: 22px;
   background:
-    radial-gradient(circle at 15% 10%, rgba(36, 113, 255, .2), transparent 32%),
-    radial-gradient(circle at 90% 85%, rgba(18, 232, 171, .13), transparent 28%),
-    #050914;
+    radial-gradient(circle at 18% 8%, rgba(73, 102, 255, .15), transparent 32%),
+    radial-gradient(circle at 88% 86%, rgba(89, 242, 189, .09), transparent 28%),
+    #080b12;
 }
 
 button { font: inherit; }
-.game-shell { width: min(1040px, 100%); }
+.game-shell { width: min(1050px, 100%); }
 
+/* --------------------------------------------------
+   TITEL UND HUD
+-------------------------------------------------- */
 .game-header {
   display: flex;
   align-items: end;
   justify-content: space-between;
-  gap: 20px;
+  gap: 24px;
   margin-bottom: 18px;
 }
 
-.eyebrow, .panel-kicker {
-  margin: 0 0 6px;
-  color: #65f5c9;
+.eyebrow {
+  margin: 0 0 7px;
+  color: var(--green);
   font-size: .72rem;
   font-weight: 900;
-  letter-spacing: .18em;
+  letter-spacing: .2em;
 }
 
 h1 {
+  max-width: 780px;
   margin: 0;
-  font-size: clamp(2.2rem, 7vw, 4.7rem);
+  font-size: clamp(2.2rem, 7vw, 4.8rem);
   line-height: .9;
   letter-spacing: -.065em;
 }
 
-.rule { margin: 0; color: #98a6bd; }
-.rule strong { color: #ff586b; }
-
-.status-bar {
-  display: grid;
-  grid-template-columns: .8fr 1.4fr .8fr;
-  gap: 10px;
-  margin-bottom: 10px;
-}
-
-.status-bar div {
-  padding: 10px 15px;
-  border: 1px solid #28344d;
-  border-radius: 12px;
-  background: rgba(14, 21, 37, .86);
-}
-
-.status-bar span {
-  display: block;
-  color: #7f8ca3;
-  font-size: .68rem;
+.main-rule {
+  flex: none;
+  margin: 0;
+  color: #c0c6d0;
   font-weight: 700;
-  letter-spacing: .09em;
+}
+
+.main-rule span {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  margin-right: 7px;
+  border-radius: 50%;
+  background: var(--red);
+  box-shadow: 0 0 14px var(--red);
+}
+
+.hud {
+  display: grid;
+  grid-template-columns: .75fr 1.5fr .85fr;
+  gap: 9px;
+  margin-bottom: 9px;
+}
+
+.hud-item {
+  min-width: 0;
+  padding: 10px 15px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: rgba(17, 23, 34, .88);
+}
+
+.hud-label {
+  display: block;
+  margin-bottom: 2px;
+  color: var(--muted);
+  font-size: .66rem;
+  font-weight: 800;
+  letter-spacing: .1em;
   text-transform: uppercase;
 }
 
-.status-bar strong { font-size: 1.18rem; }
-.status-bar strong span { display: inline; color: inherit; font-size: inherit; }
+.hud strong {
+  display: block;
+  overflow: hidden;
+  font-size: 1.16rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 
+.hud strong span { display: inline; }
+#active-glitch { color: #ffd166; }
+
+/* --------------------------------------------------
+   CANVAS UND OVERLAYS
+-------------------------------------------------- */
 .game-frame {
   position: relative;
   overflow: hidden;
-  border: 1px solid #2f3d59;
+  border: 1px solid #344056;
   border-radius: 20px;
-  background: #091224;
-  box-shadow: 0 30px 90px rgba(0, 0, 0, .45);
+  background: #0b1019;
+  box-shadow: 0 28px 90px rgba(0, 0, 0, .46);
+}
+
+.game-frame.glitch-pulse {
+  animation: frameGlitch .38s steps(2, end) 2;
 }
 
 canvas {
@@ -88,10 +132,16 @@ canvas {
   width: 100%;
   height: auto;
   aspect-ratio: 16 / 9;
+  transform: rotate(0deg);
+  transform-origin: center;
+  transition: transform .45s ease;
   touch-action: none;
 }
 
-.message-panel {
+/* Screen Flip dreht nur das sichtbare Spielfeld, nicht das HUD. */
+canvas.screen-flip { transform: rotate(180deg); }
+
+.game-panel {
   position: absolute;
   inset: 0;
   display: grid;
@@ -99,82 +149,164 @@ canvas {
   justify-items: center;
   padding: 28px;
   text-align: center;
-  background: rgba(4, 9, 20, .72);
-  backdrop-filter: blur(8px);
+  background: rgba(5, 8, 14, .78);
+  backdrop-filter: blur(9px);
 }
 
-.message-panel.hidden { display: none; }
-.message-panel h2 { margin: 0; font-size: clamp(1.8rem, 5vw, 3.3rem); }
-.message-panel p:not(.panel-kicker) { max-width: 470px; color: #aab5c8; }
+.game-panel.hidden { display: none; }
 
-.message-panel button {
+.panel-label {
+  margin: 0 0 8px;
+  color: var(--green);
+  font-size: .7rem;
+  font-weight: 900;
+  letter-spacing: .19em;
+}
+
+.game-panel h2 {
+  margin: 0;
+  font-size: clamp(2rem, 6vw, 4rem);
+  letter-spacing: -.045em;
+}
+
+.game-panel > p:not(.panel-label, .final-score) {
+  max-width: 520px;
+  margin: 12px 0;
+  color: #aab3c1;
+  line-height: 1.55;
+}
+
+.final-score {
+  margin: 8px 0 18px;
+  color: #fff;
+  font-size: 1.35rem;
+  font-weight: 900;
+  letter-spacing: .08em;
+}
+
+.hidden { display: none; }
+
+.game-panel button {
   border: 0;
   border-radius: 999px;
-  padding: 13px 24px;
-  color: #06120f;
+  padding: 13px 25px;
+  color: #06120e;
   font-weight: 900;
   cursor: pointer;
-  background: #65f5c9;
-  box-shadow: 0 10px 30px rgba(101, 245, 201, .22);
+  background: var(--green);
+  box-shadow: 0 10px 30px rgba(89, 242, 189, .22);
 }
 
-.message-panel button:hover { background: #9affe0; }
+.game-panel button:hover { background: #91ffd8; }
 
-.control-flash {
+/* Die Meldung ist normalerweise unsichtbar. JavaScript fügt .visible hinzu. */
+.glitch-message {
   position: absolute;
-  top: 22px;
-  left: 50%;
-  padding: 10px 18px;
-  border: 1px solid rgba(255, 255, 255, .22);
-  border-radius: 999px;
-  color: #07111f;
-  font-weight: 900;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  color: #fff;
   text-align: center;
   pointer-events: none;
   opacity: 0;
-  transform: translate(-50%, -12px);
-  background: #ffd166;
-  transition: opacity .2s, transform .2s;
 }
 
-.control-flash.visible { opacity: 1; transform: translate(-50%, 0); }
+.glitch-message strong {
+  font-size: clamp(2rem, 8vw, 5.5rem);
+  line-height: 1;
+  letter-spacing: -.045em;
+  text-shadow: -4px 0 #27e8ff, 4px 0 var(--red);
+}
 
+.glitch-message span {
+  margin-top: 10px;
+  padding: 8px 15px;
+  color: #080b12;
+  font-size: clamp(.9rem, 3vw, 1.5rem);
+  font-weight: 1000;
+  letter-spacing: .11em;
+  background: #ffd166;
+}
+
+.glitch-message.visible {
+  opacity: 1;
+  animation: glitchMessage 1.65s steps(2, end);
+}
+
+/* --------------------------------------------------
+   TOUCH-BUTTONS UND HILFE
+-------------------------------------------------- */
 .touch-controls {
   display: none;
   grid-template-columns: 1fr 1fr 1fr;
-  gap: 10px;
-  margin-top: 12px;
+  gap: 9px;
+  margin-top: 11px;
 }
 
 .touch-controls button {
   min-height: 58px;
-  border: 1px solid #33415e;
-  border-radius: 14px;
-  color: #dce7f8;
-  font-size: 1.4rem;
+  border: 1px solid #354158;
+  border-radius: 13px;
+  color: #edf3ff;
+  font-size: 1.45rem;
   font-weight: 900;
-  background: #111b30;
+  background: #141c29;
   user-select: none;
   touch-action: none;
 }
 
-.touch-controls button:active { background: #243554; }
-.touch-controls .jump { color: #65f5c9; }
-.hint { margin: 10px 4px 0; color: #7f8ca3; font-size: .82rem; }
+.touch-controls button:active { background: #283750; }
+.touch-controls .jump-button { color: var(--green); }
 
-@media (pointer: coarse), (max-width: 700px) {
+.game-help {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px 22px;
+  margin: 11px 3px 0;
+  color: #7f899a;
+  font-size: .8rem;
+}
+
+.game-help p { margin: 0; }
+.game-help strong { color: #bfc6d2; }
+
+/* --------------------------------------------------
+   ANIMATIONEN UND KLEINE BILDSCHIRME
+-------------------------------------------------- */
+@keyframes glitchMessage {
+  0% { opacity: 0; transform: scale(.78) skew(-7deg); }
+  10%, 78% { opacity: 1; transform: scale(1) skew(0); }
+  35% { transform: translateX(-7px); }
+  38% { transform: translateX(8px); }
+  100% { opacity: 0; transform: scale(1.08); }
+}
+
+@keyframes frameGlitch {
+  0% { transform: translate(0); filter: none; }
+  25% { transform: translate(-5px, 2px); filter: hue-rotate(40deg); }
+  50% { transform: translate(6px, -2px); }
+  100% { transform: translate(0); filter: none; }
+}
+
+@media (pointer: coarse), (max-width: 740px) {
   .touch-controls { display: grid; }
 }
 
-@media (max-width: 600px) {
+@media (max-width: 620px) {
   body { padding: 13px; }
-  .game-header { align-items: start; flex-direction: column; gap: 10px; }
-  .status-bar { grid-template-columns: .65fr 1.35fr .8fr; }
-  .status-bar div { padding: 8px 9px; }
-  .status-bar strong { font-size: .93rem; }
-  .control-flash { top: 10px; padding: 7px 11px; font-size: .78rem; }
+  .game-header { align-items: start; flex-direction: column; gap: 11px; }
+  .hud { grid-template-columns: .7fr 1.45fr .85fr; }
+  .hud-item { padding: 8px 9px; }
+  .hud strong { font-size: .87rem; }
+  .hud-label { font-size: .56rem; }
+  .main-rule { font-size: .88rem; }
+  .game-frame { border-radius: 14px; }
+  .glitch-message span { padding: 6px 9px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .control-flash { transition: none; }
+  canvas { transition: none; }
+  .glitch-message.visible, .game-frame.glitch-pulse { animation: none; }
+  .glitch-message.visible { opacity: 1; }
 }
