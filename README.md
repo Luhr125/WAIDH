@@ -139,6 +139,21 @@ In `scenes.js`:
 - `sourceUrl` – gestreamte Videodatei
 - `sourceLink` und `licenseLink` – Quellen- und Lizenzangabe
 
+### YouTube-Szenen
+
+Die Breaking-Bad- und Matrix-Szenen werden über den offiziellen
+YouTube-IFrame-Player eingebettet. Die Videos werden nicht heruntergeladen,
+nicht verändert und nicht im Repository gespeichert. In `scenes.js` kannst du
+bei diesen Szenen Folgendes anpassen:
+
+- `youtubeId` – ID des YouTube-Videos
+- `clipStart` und `clipEnd` – verwendeter Zeitbereich in Sekunden
+- `cues` – eigene Sprechtexte und ihre Zeitfenster
+
+Ob ein YouTube-Video verfügbar ist, kann sich je nach Land, Alterseinstellung
+oder Entscheidung des hochladenden Kanals ändern. Werbung und Hinweise des
+YouTube-Players können ebenfalls erscheinen.
+
 ### Aufnahme und Spielablauf
 
 In `app.js`:
@@ -180,6 +195,8 @@ sind Teil der Gameshow-Unterhaltung.
   zurück.
 - Automatische Audio- und Videowiedergabe kann blockiert werden. Ein erneuter
   Klick auf **Abspielen** löst das normalerweise.
+- Die YouTube-Szenen brauchen eine Internetverbindung und laufen immer im
+  eingebetteten YouTube-Player.
 - Der Final Cut wird lokal wiedergegeben, aber nicht als neue Videodatei
   exportiert.
 - Verwende nur Videos, für die du die nötigen Rechte besitzt.

@@ -106,6 +106,12 @@
                 <button class="scene-choice" data-scene-id="tos-confession" type="button">
                   <span>03</span> Das Geständnis
                 </button>
+                <button class="scene-choice youtube-choice" data-scene-id="youtube-breaking-bad" type="button">
+                  <span>04</span> Breaking Bad: Say My Name
+                </button>
+                <button class="scene-choice youtube-choice" data-scene-id="youtube-matrix" type="button">
+                  <span>05</span> Matrix: Rote oder blaue Pille
+                </button>
               </div>
 
               <div class="scene-actions">
@@ -144,6 +150,9 @@
           <div id="stage" class="stage">
             <canvas id="scene-canvas" width="960" height="540" aria-label="Animierte Demo-Szene"></canvas>
             <video id="scene-video" class="hidden" playsinline preload="metadata"></video>
+            <div id="youtube-player-shell" class="youtube-player-shell hidden" aria-label="YouTube-Filmszene">
+              <div id="youtube-player"></div>
+            </div>
 
             <div id="subtitle" class="subtitle hidden">
               <span id="subtitle-speaker"></span>
@@ -309,6 +318,10 @@
         <div class="editor-preview">
           <canvas id="editor-preview-canvas" width="960" height="540" aria-label="Vorschau der Demo-Szene"></canvas>
           <video id="editor-preview-video" class="hidden" playsinline controls></video>
+          <div id="editor-youtube-note" class="editor-youtube-note hidden">
+            YouTube-Szenen werden im Studio über den eingebetteten Player abgespielt.
+            Die Zeitwerte kannst du hier trotzdem direkt ändern.
+          </div>
         </div>
 
         <div class="cue-table-header" aria-hidden="true">

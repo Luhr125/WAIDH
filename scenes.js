@@ -60,9 +60,10 @@ const demoScene = {
 
 /* ==================================================
    ECHTE FILMSZENEN
-   Alle drei Ausschnitte stammen aus "Tears of Steel".
-   Der Film wurde von der Blender Foundation unter
-   Creative Commons BY 3.0 veröffentlicht.
+   Die ersten drei Ausschnitte stammen aus "Tears of
+   Steel" (CC BY 3.0). Die weiteren Szenen laufen über
+   den offiziellen YouTube-Player und werden nicht
+   heruntergeladen oder im Projekt gespeichert.
    ================================================== */
 
 const tearsOfSteelVideoUrl = "https://upload.wikimedia.org/wikipedia/commons/transcoded/1/10/Tears_of_Steel_in_4k_-_Official_Blender_Foundation_release.webm/Tears_of_Steel_in_4k_-_Official_Blender_Foundation_release.webm.480p.vp9.webm";
@@ -128,6 +129,57 @@ const realScenes = [
       { id: 5, start: 390.5, end: 393, speaker: "Celia", text: "Eigentlich sollte ich dich einfach zerquetschen." },
       { id: 6, start: 396, end: 397, speaker: "Thom", text: "Ich ..." },
       { id: 7, start: 407, end: 408, speaker: "Thom", text: "Es tut mir leid." },
+    ],
+  },
+  {
+    id: "youtube-breaking-bad",
+    type: "youtube",
+    mediaKind: "youtube",
+    youtubeId: "MPYlxeG-8_w",
+    title: "Breaking Bad: Say My Name",
+    duration: 191,
+    clipStart: 130,
+    clipEnd: 186,
+    description: "7 Dialoge · 56 Sekunden · YouTube",
+    posterUrl: "https://i.ytimg.com/vi/MPYlxeG-8_w/hqdefault.jpg",
+    sourceTitle: "Breaking Bad – Say My Name",
+    sourceAuthor: "Rotten Tomatoes TV",
+    sourceLink: "https://www.youtube.com/watch?v=MPYlxeG-8_w",
+    licenseName: "IM YOUTUBE-PLAYER",
+    licenseLink: "https://www.youtube.com/watch?v=MPYlxeG-8_w",
+    cues: [
+      { id: 1, start: 132, end: 138, speaker: "Walter", text: "Dein Produkt ist siebzig Prozent rein. Meins: neunundneunzig Komma eins." },
+      { id: 2, start: 140, end: 144, speaker: "Declan", text: "Und? Was soll das beweisen?" },
+      { id: 3, start: 146, end: 153, speaker: "Walter", text: "Du spielst Kreisliga. Ich stehe im Finale der Champions League." },
+      { id: 4, start: 156, end: 162, speaker: "Declan", text: "Du hältst dich wohl für etwas ganz Besonderes." },
+      { id: 5, start: 165, end: 170, speaker: "Walter", text: "Wenn du weisst, wer ich bin, dann sag meinen Namen." },
+      { id: 6, start: 173, end: 178, speaker: "Declan", text: "Du bist Heisenberg." },
+      { id: 7, start: 180, end: 183, speaker: "Walter", text: "Ganz genau." },
+    ],
+  },
+  {
+    id: "youtube-matrix",
+    type: "youtube",
+    mediaKind: "youtube",
+    youtubeId: "zE7PKRjrid4",
+    title: "Matrix: Rote oder blaue Pille",
+    duration: 160,
+    clipStart: 92,
+    clipEnd: 158,
+    description: "6 Dialoge · 66 Sekunden · YouTube",
+    posterUrl: "https://i.ytimg.com/vi/zE7PKRjrid4/hqdefault.jpg",
+    sourceTitle: "The Matrix – Blue Pill or Red Pill",
+    sourceAuthor: "Movieclips",
+    sourceLink: "https://www.youtube.com/watch?v=zE7PKRjrid4",
+    licenseName: "IM YOUTUBE-PLAYER",
+    licenseLink: "https://www.youtube.com/watch?v=zE7PKRjrid4",
+    cues: [
+      { id: 1, start: 94, end: 102, speaker: "Morpheus", text: "Niemand kann dir erklären, was dieses System wirklich ist." },
+      { id: 2, start: 104, end: 110, speaker: "Morpheus", text: "Du musst es mit deinen eigenen Augen sehen." },
+      { id: 3, start: 114, end: 121, speaker: "Morpheus", text: "Das ist deine letzte Chance. Danach gibt es kein Zurück." },
+      { id: 4, start: 124, end: 133, speaker: "Morpheus", text: "Nimm die blaue Pille und morgen wirkt alles wie ein seltsamer Traum." },
+      { id: 5, start: 136, end: 147, speaker: "Morpheus", text: "Nimm die rote Pille und ich zeige dir, wie tief der Kaninchenbau wirklich geht." },
+      { id: 6, start: 150, end: 156, speaker: "Morpheus", text: "Ich verspreche dir nur eines: die Wahrheit." },
     ],
   },
 ];

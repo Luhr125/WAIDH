@@ -301,6 +301,7 @@ button:disabled { opacity: .45; cursor: not-allowed; }
   background: #0c121e;
 }
 .scene-choice span { color: var(--cyan); margin-right: 4px; }
+.scene-choice.youtube-choice span { color: #ff5964; }
 .scene-choice.selected { border-color: var(--purple); color: var(--text); background: #20283a; }
 .scene-credit { margin: 12px 0 0; color: var(--muted); font-size: .68rem; line-height: 1.5; }
 .scene-credit a, .stage-license { color: #b6c9ec; }
@@ -326,7 +327,8 @@ button:disabled { opacity: .45; cursor: not-allowed; }
   box-shadow: 0 30px 90px rgba(0, 0, 0, .38);
 }
 
-#scene-canvas, #scene-video { display: block; width: 100%; height: auto; aspect-ratio: 16 / 9; object-fit: contain; background: #050811; }
+#scene-canvas, #scene-video, .youtube-player-shell { display: block; width: 100%; height: auto; aspect-ratio: 16 / 9; object-fit: contain; background: #050811; }
+.youtube-player-shell iframe { display: block; width: 100%; height: 100%; border: 0; }
 .subtitle {
   position: absolute;
   left: 50%;
@@ -547,6 +549,7 @@ button:disabled { opacity: .45; cursor: not-allowed; }
 .editor-toolbar p { margin: 0; color: var(--muted); }
 .editor-preview { overflow: hidden; width: min(520px, 100%); margin: 14px auto; border: 1px solid var(--line); border-radius: 13px; background: #050811; }
 .editor-preview canvas, .editor-preview video { display: block; width: 100%; height: auto; aspect-ratio: 16 / 9; object-fit: contain; }
+.editor-youtube-note { min-height: 180px; display: grid; place-items: center; padding: 30px; color: var(--muted); text-align: center; line-height: 1.6; background: radial-gradient(circle at 50% 30%, rgba(255, 89, 100, .13), transparent 65%); }
 .cue-table-header, .cue-editor-row { display: grid; grid-template-columns: 80px 80px 140px minmax(220px, 1fr) auto; gap: 8px; align-items: center; }
 .cue-table-header { padding: 17px 8px 7px; color: var(--muted); font-size: .62rem; font-weight: 900; letter-spacing: .08em; text-transform: uppercase; }
 .cue-editor-row { margin-top: 7px; padding: 8px; border: 1px solid var(--line); border-radius: 12px; background: #0d131f; }

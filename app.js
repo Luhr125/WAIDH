@@ -43,6 +43,7 @@ const elements = {
   stage: document.querySelector("#stage"),
   sceneCanvas: document.querySelector("#scene-canvas"),
   sceneVideo: document.querySelector("#scene-video"),
+  youtubePlayerShell: document.querySelector("#youtube-player-shell"),
   subtitle: document.querySelector("#subtitle"),
   subtitleSpeaker: document.querySelector("#subtitle-speaker"),
   subtitleText: document.querySelector("#subtitle-text"),
@@ -104,6 +105,7 @@ const elements = {
   editorDuration: document.querySelector("#editor-duration"),
   editorPreviewCanvas: document.querySelector("#editor-preview-canvas"),
   editorPreviewVideo: document.querySelector("#editor-preview-video"),
+  editorYoutubeNote: document.querySelector("#editor-youtube-note"),
   cueEditorList: document.querySelector("#cue-editor-list"),
   editorError: document.querySelector("#editor-error"),
   jsonImportInput: document.querySelector("#json-import-input"),
@@ -141,6 +143,9 @@ let editorPreviewPlaying = false;
 let editorPreviewStartedAt = 0;
 let editorPreviewEnd = 0;
 let toastTimer = null;
+let youtubeApiPromise = null;
+let youtubePlayerPromise = null;
+let youtubePlayer = null;
 
 function cloneScene(scene) {
   return JSON.parse(JSON.stringify(scene));
@@ -462,17 +467,18 @@ function deleteMicrophoneTest() {
 function updateSelectedSceneDisplay() {
   const isCanvas = selectedScene.type === "canvas";
   const isOpenMovie = selectedScene.mediaKind === "open-movie";
-  const mediaLabel = isCanvas ? "Canvas-Demo" : isOpenMovie ? "echter Film" : "lokales Video";
+  const isYouTube = selectedScene.type === "youtube";
+  const mediaLabel = isCanvas ? "Canvas-Demo" : isYouTube ? "YouTube-Szene" : isOpenMovie ? "echter Film" : "lokales Video";
 
   elements.selectedSceneTitle.textContent = selectedScene.title;
   elements.selectedSceneDetails.textContent = `${selectedScene.cues.length} Dialoge · ${getSceneClipDuration().toFixed(0)} Sekunden · ${mediaLabel}`;
-  elements.sceneTypeBadge.textContent = isCanvas ? "DEMO" : isOpenMovie ? "FILM" : "LOKAL";
+  elements.sceneTypeBadge.textContent = isCanvas ? "DEMO" : isYouTube ? "YOUTUBE" : isOpenMovie ? "FILM" : "LOKAL";
   elements.sceneTypeBadge.classList.add("ready");
 
   elements.scenePoster.classList.toggle("hidden", !selectedScene.posterUrl);
   if (selectedScene.posterUrl) elements.scenePoster.src = selectedScene.posterUrl;
   elements.scenePreview.classList.toggle("film-preview", Boolean(selectedScene.posterUrl));
-  elements.filmPreviewBadge.textContent = isOpenMovie ? "ECHTER FILM" : isCanvas ? "CANVAS-DEMO" : "EIGENES VIDEO";
+  elements.filmPreviewBadge.textContent = isYouTube ? "YOUTUBE-SZENE" : isOpenMovie ? "ECHTER FILM" : isCanvas ? "CANVAS-DEMO" : "EIGENES VIDEO";
 
   elements.sceneCredit.classList.toggle("hidden", !selectedScene.sourceLink);
   elements.stageLicense.classList.toggle("hidden", !selectedScene.sourceLink);
@@ -577,6 +583,80 @@ function setVideoSources(scene = selectedScene) {
   elements.editorPreviewVideo.poster = scene.posterUrl || "";
 }
 
+// Der YouTube-IFrame-Player wird erst geladen, wenn eine YouTube-Szene
+// wirklich gebraucht wird. So bleibt der Start der Seite schnell.
+function loadYouTubeApi() {
+  if (window.YT?.Player) return Promise.resolve();
+  if (youtubeApiPromise) return youtubeApiPromise;
+
+  youtubeApiPromise = new Promise((resolve, reject) => {
+    window.onYouTubeIframeAPIReady = resolve;
+    const script = document.createElement("script");
+    script.src = "https://www.youtube.com/iframe_api";
+    script.async = true;
+    script.addEventListener("error", () => reject(new Error("Der YouTube-Player konnte nicht geladen werden.")), { once: true });
+    document.head.append(script);
+  });
+  return youtubeApiPromise;
+}
+
+function handleYouTubeError() {
+  const error = new Error("Diese YouTube-Szene ist gerade nicht eingebettet verfügbar. Öffne den Quellenlink oder wähle eine andere Szene.");
+  if (playback && selectedScene.type === "youtube") {
+    const reject = playback.reject;
+    playback = null;
+    reject?.(error);
+  }
+  showToast(error.message);
+}
+
+async function ensureYouTubePlayer() {
+  if (youtubePlayerPromise) return youtubePlayerPromise;
+  youtubePlayerPromise = loadYouTubeApi().then(() => new Promise((resolve) => {
+    youtubePlayer = new window.YT.Player("youtube-player", {
+      width: "100%",
+      height: "100%",
+      videoId: selectedScene.type === "youtube" ? selectedScene.youtubeId : "",
+      playerVars: {
+        autoplay: 0,
+        controls: 0,
+        disablekb: 1,
+        fs: 0,
+        playsinline: 1,
+        rel: 0,
+      },
+      events: {
+        onReady: (event) => resolve(event.target),
+        onError: handleYouTubeError,
+      },
+    });
+  })).catch((error) => {
+    youtubePlayerPromise = null;
+    throw error;
+  });
+  return youtubePlayerPromise;
+}
+
+async function prepareYouTubeScene(scene = selectedScene) {
+  if (scene.type !== "youtube") return;
+  const player = await ensureYouTubePlayer();
+  if (selectedScene.id !== scene.id) return;
+  player.cueVideoById({
+    videoId: scene.youtubeId,
+    startSeconds: getSceneClipStart(scene),
+    endSeconds: getSceneClipEnd(scene),
+  });
+  player.setVolume(masterVolume * 100);
+}
+
+function pauseYouTubePlayer() {
+  try {
+    youtubePlayer?.pauseVideo?.();
+  } catch {
+    // Der externe Player ist möglicherweise noch nicht vollständig bereit.
+  }
+}
+
 function selectRealScene(sceneId) {
   const scene = window.SyncScenes.realScenes.find((item) => item.id === sceneId);
   if (!scene) return;
@@ -589,6 +669,7 @@ function selectRealScene(sceneId) {
 
 function selectDemoScene() {
   stopPlayback();
+  pauseYouTubePlayer();
   selectedScene = cloneScene(window.SyncScenes.demoScene);
   elements.sceneVideo.removeAttribute("src");
   elements.editorPreviewVideo.removeAttribute("src");
@@ -667,10 +748,12 @@ function openSceneEditor() {
 
 function prepareEditorPreview() {
   const usesVideo = editorDraft.type === "video";
-  elements.editorPreviewCanvas.classList.toggle("hidden", usesVideo);
+  const usesYouTube = editorDraft.type === "youtube";
+  elements.editorPreviewCanvas.classList.toggle("hidden", usesVideo || usesYouTube);
   elements.editorPreviewVideo.classList.toggle("hidden", !usesVideo);
+  elements.editorYoutubeNote.classList.toggle("hidden", !usesYouTube);
   editorPreviewTime = 0;
-  if (!usesVideo) window.SyncScenes.renderDemoScene(editorContext, 0, 960, 540, editorDraft);
+  if (!usesVideo && !usesYouTube) window.SyncScenes.renderDemoScene(editorContext, 0, 960, 540, editorDraft);
 }
 
 function renderCueEditor() {
@@ -751,7 +834,9 @@ async function previewEditorCue(cueId) {
   }
 
   showInlineError(elements.editorError);
-  if (editorDraft.type === "video") {
+  if (editorDraft.type === "youtube") {
+    showInlineError(elements.editorError, "YouTube-Vorschauen laufen im Studio. Speichere die Zeiten und prüfe sie dort mit „Original ansehen“.");
+  } else if (editorDraft.type === "video") {
     const video = elements.editorPreviewVideo;
     video.currentTime = cue.start;
     video.volume = masterVolume;
@@ -845,6 +930,10 @@ function escapeHtml(text) {
 function getPlaybackTime(now = performance.now()) {
   if (!playback) return sceneTime;
   if (selectedScene.type === "video") return elements.sceneVideo.currentTime;
+  if (selectedScene.type === "youtube") {
+    const currentTime = Number(youtubePlayer?.getCurrentTime?.());
+    return Number.isFinite(currentTime) && currentTime >= playback.start - 1 ? currentTime : playback.pausedAt;
+  }
   if (playback.paused) return playback.pausedAt;
   return (now - playback.demoStartedAt) / 1000;
 }
@@ -877,7 +966,25 @@ async function playSceneRange(start, end, options = {}) {
   sceneTime = start;
   elements.sceneProgressBar.style.width = "0%";
 
-  if (selectedScene.type === "video") {
+  if (selectedScene.type === "youtube") {
+    try {
+      const activePlayback = playback;
+      const player = await ensureYouTubePlayer();
+      if (playback !== activePlayback) return promise;
+      player.setVolume(masterVolume * 100);
+      if (settings.originalAudio) player.unMute();
+      else player.mute();
+      player.loadVideoById({
+        videoId: selectedScene.youtubeId,
+        startSeconds: start,
+        endSeconds: end,
+      });
+    } catch (error) {
+      const reject = playback?.reject;
+      playback = null;
+      reject?.(error);
+    }
+  } else if (selectedScene.type === "video") {
     try {
       await waitForVideoMetadata(elements.sceneVideo);
       elements.sceneVideo.currentTime = start;
@@ -923,8 +1030,9 @@ function playDemoSignal(cue) {
 }
 
 function stopPlayback() {
-  if (!playback) return;
   elements.sceneVideo.pause();
+  pauseYouTubePlayer();
+  if (!playback) return;
   playback.activeAudios.forEach((audio) => {
     audio.pause();
     audio.currentTime = 0;
@@ -939,6 +1047,7 @@ function stopPlayback() {
 function finishPlayback() {
   if (!playback) return;
   elements.sceneVideo.pause();
+  pauseYouTubePlayer();
   playback.activeAudios.forEach((audio) => audio.pause());
   const resolve = playback.resolve;
   playback = null;
@@ -955,9 +1064,11 @@ function togglePlaybackPause() {
   if (playback.paused) {
     playback.pausedAt = currentTime;
     elements.sceneVideo.pause();
+    pauseYouTubePlayer();
     playback.activeAudios.forEach((audio) => audio.pause());
   } else {
     if (selectedScene.type === "video") elements.sceneVideo.play().catch(() => showToast("Wiedergabe konnte nicht fortgesetzt werden."));
+    if (selectedScene.type === "youtube") youtubePlayer?.playVideo?.();
     playback.demoStartedAt = performance.now() - playback.pausedAt * 1000;
     playback.activeAudios.forEach((audio) => audio.play().catch(() => {}));
   }
@@ -1060,9 +1171,12 @@ async function startShow() {
 
 function prepareMainScene() {
   const usesVideo = selectedScene.type === "video";
-  elements.sceneCanvas.classList.toggle("hidden", usesVideo);
+  const usesYouTube = selectedScene.type === "youtube";
+  elements.sceneCanvas.classList.toggle("hidden", usesVideo || usesYouTube);
   elements.sceneVideo.classList.toggle("hidden", !usesVideo);
+  elements.youtubePlayerShell.classList.toggle("hidden", !usesYouTube);
   if (usesVideo) setVideoSources();
+  if (usesYouTube) prepareYouTubeScene().catch((error) => showToast(error.message));
 }
 
 function beginPlayerTurn() {
@@ -1392,6 +1506,7 @@ elements.masterVolume.addEventListener("input", () => {
   elements.volumeValue.textContent = `${elements.masterVolume.value}%`;
   elements.sceneVideo.volume = masterVolume;
   elements.editorPreviewVideo.volume = masterVolume;
+  youtubePlayer?.setVolume?.(masterVolume * 100);
 });
 
 document.querySelector(".brand").addEventListener("click", (event) => {
@@ -1456,6 +1571,7 @@ window.addEventListener("beforeunload", () => {
   revokeAllTakes();
   if (customVideoUrl) URL.revokeObjectURL(customVideoUrl);
   if (microphoneTestUrl) URL.revokeObjectURL(microphoneTestUrl);
+  youtubePlayer?.destroy?.();
 });
 
 // --------------------------------------------------
