@@ -3,47 +3,76 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#07111f" />
-    <title>Shift Runner</title>
+    <meta name="theme-color" content="#080b12" />
+    <title>Don't Touch the Red</title>
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
     <main class="game-shell">
+      <!-- Titel und wichtigste Regel -->
       <header class="game-header">
         <div>
           <p class="eyebrow">WAIDH ARCADE</p>
-          <h1>Shift Runner</h1>
+          <h1>Don't Touch the Red</h1>
         </div>
-        <p class="rule"><strong>Regel:</strong> Berühre niemals Rot.</p>
+        <p class="main-rule"><span></span> Alles Rote ist tödlich.</p>
       </header>
 
-      <section class="status-bar" aria-label="Spielstatus">
-        <div><span>Versuche</span><strong id="lives">3</strong></div>
-        <div><span>Steuerung</span><strong id="controls">← ↑ →</strong></div>
-        <div><span>Wechsel in</span><strong><span id="switch-timer">10</span>s</strong></div>
+      <!-- Diese Werte werden in game.js laufend aktualisiert. -->
+      <section class="hud" aria-label="Spielstatus">
+        <div class="hud-item">
+          <span class="hud-label">Score</span>
+          <strong id="score">0</strong>
+        </div>
+        <div class="hud-item hud-item-wide">
+          <span class="hud-label">Active Glitch</span>
+          <strong id="active-glitch">NONE</strong>
+        </div>
+        <div class="hud-item">
+          <span class="hud-label">Next Glitch</span>
+          <strong><span id="glitch-countdown">10</span>s</strong>
+        </div>
       </section>
 
-      <section class="game-frame">
-        <canvas id="game" width="960" height="540" aria-label="Jump-and-Run-Spielfeld"></canvas>
+      <section id="game-frame" class="game-frame">
+        <canvas
+          id="game-canvas"
+          width="960"
+          height="540"
+          aria-label="2D Jump-and-Run-Spielfeld"
+        ></canvas>
 
-        <div id="message-panel" class="message-panel">
-          <p class="panel-kicker">SCHICHT 01</p>
-          <h2 id="message-title">Bereit zum Lauf?</h2>
-          <p id="message-copy">Erreiche das Portal. Alle 10 Sekunden ändern sich deine Tasten.</p>
-          <button id="start-button" type="button">Spiel starten</button>
+        <!-- Kurze, grosse Meldung bei einem neuen Glitch -->
+        <div id="glitch-message" class="glitch-message" aria-live="polite">
+          <strong>⚠ GLITCH ⚠</strong>
+          <span id="glitch-name">REVERSE CONTROLS</span>
         </div>
 
-        <div id="control-flash" class="control-flash" aria-live="polite"></div>
+        <!-- Start-, Game-Over- und Gewinn-Bildschirm -->
+        <div id="game-panel" class="game-panel">
+          <p id="panel-label" class="panel-label">WAIDH PROTOCOL</p>
+          <h2 id="panel-title">Bereit?</h2>
+          <p id="panel-text">
+            Erreiche das grüne Ziel. Alle 10 Sekunden verändert ein zufälliger Glitch das Spiel.
+          </p>
+          <p id="final-score" class="final-score hidden">SCORE: 0</p>
+          <button id="start-button" type="button">Spiel starten</button>
+        </div>
       </section>
 
+      <!-- Die Touch-Buttons sind auf Smartphones sichtbar. -->
       <nav class="touch-controls" aria-label="Touch-Steuerung">
         <button id="touch-left" type="button" aria-label="Nach links">←</button>
-        <button id="touch-jump" class="jump" type="button" aria-label="Springen">↑</button>
+        <button id="touch-jump" class="jump-button" type="button" aria-label="Springen">↑</button>
         <button id="touch-right" type="button" aria-label="Nach rechts">→</button>
       </nav>
 
-      <p class="hint">Blau bist du. Grün ist das Ziel. Rot setzt dich zurück.</p>
+      <footer class="game-help">
+        <p><strong>Laufen:</strong> A / D oder ← / →</p>
+        <p><strong>Springen:</strong> W, ↑ oder Leertaste</p>
+      </footer>
     </main>
+
     <script src="game.js"></script>
   </body>
 </html>
