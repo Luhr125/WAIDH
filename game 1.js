@@ -82,8 +82,9 @@ const room2Mines = Array.from({length:21},(_,row)=>Array.from({length:37},(_,col
 */
 const rooms = [
   // Raum 1 kombiniert Wände, Kugeln, Turrets, Drehbalken, Minen und fünf Münzen.
+  // Rechts von der Wand bei X=1010 bleibt der Raum bewusst offen (kein Zusatzgang).
   {name:"Eingangshalle", start:680, left:null, right:y=>y>50&&y<140?{to:1,entry:90}:null, top:x=>x>650&&x<750&&collected.size===TOTAL_COINS?"finish":null,
-   walls:[...border,[150,105,34,570],[355,28,34,310],[355,470,34,322],[570,170,34,622],[795,28,34,455],[795,615,34,177],[1010,170,34,622],[1180,28,34,520],[1280,170,34,622]],
+   walls:[...border,[150,105,34,570],[355,28,34,310],[355,470,34,322],[570,170,34,622],[795,28,34,455],[795,615,34,177],[1010,170,34,622]],
    drones:[[255,70,0,4.1,60,720],[465,720,0,-4.3,60,720],[690,75,0,4.4,60,720],[900,720,0,-4.2,60,720],[1095,70,0,4.5,60,720]], turrets:[[270,610],[690,100],[1090,520]], spinners:[[270,390,76,2.5],[700,550,86,-2.8],[1112,420,58,3.2]], mines:[[245,210],[465,520],[690,260],[900,640],[1100,220]], coins:[[70,500],[250,90],[470,400],[900,560],[1090,100]]},
   // Raum 2 verwendet das automatisch erzeugte Minenfeld und bewegliche Kugeln.
   {name:"Minenkorridor", start:90, left:y=>y>50&&y<140?{to:0}:null, right:y=>y>600&&y<720?{to:2}:null,
